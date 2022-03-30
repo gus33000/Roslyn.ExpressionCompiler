@@ -42,7 +42,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             case CommonGeneratedNameKind.LocalFunction: return GeneratedNameKind.LocalFunction;
             case CommonGeneratedNameKind.Deprecated_InitializerLocal: return GeneratedNameKind.Deprecated_InitializerLocal;
             case CommonGeneratedNameKind.AnonymousTypeField: return GeneratedNameKind.AnonymousTypeField;
-            case CommonGeneratedNameKind.Deprecated_AnonymousTypeTypeParameter: return GeneratedNameKind.Deprecated_AnonymousTypeTypeParameter;
+            case CommonGeneratedNameKind.Deprecated_AnonymousTypeTypeParameter: return GeneratedNameKind.AnonymousTypeTypeParameter; //TODO: undeprecate??
             case CommonGeneratedNameKind.AutoPropertyBackingField: return GeneratedNameKind.AutoPropertyBackingField;
             case CommonGeneratedNameKind.IteratorCurrentThreadIdField: return GeneratedNameKind.IteratorCurrentThreadIdField;
             case CommonGeneratedNameKind.IteratorFinallyMethod: return GeneratedNameKind.IteratorFinallyMethod;
@@ -81,7 +81,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             case GeneratedNameKind.LocalFunction: return CommonGeneratedNameKind.LocalFunction;
             case GeneratedNameKind.TransparentIdentifier: return CommonGeneratedNameKind.TransparentIdentifier;
             case GeneratedNameKind.AnonymousTypeField: return CommonGeneratedNameKind.AnonymousTypeField;
-            case GeneratedNameKind.Deprecated_AnonymousTypeTypeParameter: return CommonGeneratedNameKind.Deprecated_AnonymousTypeTypeParameter;
+            case GeneratedNameKind.AnonymousTypeTypeParameter: return CommonGeneratedNameKind.Deprecated_AnonymousTypeTypeParameter; //TODO: undeprecate??
             case GeneratedNameKind.AutoPropertyBackingField: return CommonGeneratedNameKind.AutoPropertyBackingField;
             case GeneratedNameKind.IteratorCurrentThreadIdField: return CommonGeneratedNameKind.IteratorCurrentThreadIdField;
             case GeneratedNameKind.IteratorFinallyMethod: return CommonGeneratedNameKind.IteratorFinallyMethod;

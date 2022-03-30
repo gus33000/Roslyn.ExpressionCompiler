@@ -27,7 +27,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator
             Dim substitutedSourceHasMeParameter = meParameter IsNot Nothing
             If substitutedSourceHasMeParameter Then
                 _meParameter = MakeParameterSymbol(-1, GeneratedNames.MakeStateMachineCapturedMeName(), meParameter)
-                Debug.Assert(_meParameter.Type = originalMethod.ContainingType)
+                Debug.Assert(TypeSymbol.Equals(_meParameter.Type, originalMethod.ContainingType, TypeCompareKind.ConsiderEverything))
             End If
 
             For Each p In originalMethod.Parameters
@@ -97,6 +97,12 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator
         Public Overrides ReadOnly Property IsIterator As Boolean
             Get
                 Return _originalMethod.IsIterator
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property IsInitOnly As Boolean
+            Get
+                Return _originalMethod.IsInitOnly
             End Get
         End Property
 

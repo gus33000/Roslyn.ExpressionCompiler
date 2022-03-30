@@ -1,4 +1,8 @@
-﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+#nullable disable
 
 using System;
 using System.Collections.Generic;
@@ -6,8 +10,6 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.CodeAnalysis.CodeGen;
-using Microsoft.CodeAnalysis.Collections;
-using Microsoft.CodeAnalysis.CSharp.Emit;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.ExpressionEvaluator;
 using Microsoft.CodeAnalysis.PooledObjects;
@@ -33,7 +35,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
         // We may thus assume that the method ordinal is always 0.
         //
         // Consider making the implementation more flexible in order to avoid this assumption.
-        // In future we might need to compile multiple expression and then we'll need to assign 
+        // In future we might need to compile multiple expression and then we'll need to assign
         // a unique method ordinal to each of them to avoid duplicate synthesized member names.
         private const int _methodOrdinal = 0;
 
@@ -58,7 +60,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
         /// exactly once, otherwise it may be skipped.)
         /// </summary>
         private readonly GenerateMethodBody _generateMethodBody;
-        private TypeSymbol _lazyReturnType;
+        private TypeWithAnnotations _lazyReturnType;
         private ResultProperties _lazyResultProperties;
 
         // NOTE: This is only used for asserts, so it could be conditional on DEBUG.
@@ -77,7 +79,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             GenerateMethodBody generateMethodBody)
         {
             Debug.Assert(sourceMethod.IsDefinition);
-            Debug.Assert(sourceMethod.ContainingSymbol == container.SubstitutedSourceType.OriginalDefinition);
+            Debug.Assert(TypeSymbol.Equals((TypeSymbol)sourceMethod.ContainingSymbol, container.SubstitutedSourceType.OriginalDefinition, TypeCompareKind.ConsiderEverything2));
             Debug.Assert(sourceLocals.All(l => l.ContainingSymbol == sourceMethod));
 
             _compiler = compiler;
@@ -89,8 +91,8 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             // (since the old ones have the wrong owners).  Unfortunately, we have a circular dependency:
             //   1) Each new type parameter requires the entire map in order to be able to construct its constraint list.
             //   2) The map cannot be constructed until all new type parameters exist.
-            // Our solution is to pass each new type parameter a lazy reference to the type map.  We then 
-            // initialize the map as soon as the new type parameters are available - and before they are 
+            // Our solution is to pass each new type parameter a lazy reference to the type map.  We then
+            // initialize the map as soon as the new type parameters are available - and before they are
             // handed out - so that there is never a period where they can require the type map and find
             // it uninitialized.
 
@@ -123,7 +125,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             if (substitutedSourceHasThisParameter)
             {
                 _thisParameter = MakeParameterSymbol(0, GeneratedNames.ThisProxyFieldName(), substitutedSourceThisParameter);
-                Debug.Assert(_thisParameter.Type == this.SubstitutedSourceMethod.ContainingType);
+                Debug.Assert(TypeSymbol.Equals(_thisParameter.Type, this.SubstitutedSourceMethod.ContainingType, TypeCompareKind.ConsiderEverything2));
                 parameterBuilder.Add(_thisParameter);
             }
 
@@ -187,7 +189,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
 
         private ParameterSymbol MakeParameterSymbol(int ordinal, string name, ParameterSymbol sourceParameter)
         {
-            return SynthesizedParameterSymbol.Create(this, sourceParameter.Type, ordinal, sourceParameter.RefKind, name, sourceParameter.CustomModifiers, sourceParameter.RefCustomModifiers);
+            return SynthesizedParameterSymbol.Create(this, sourceParameter.TypeWithAnnotations, ordinal, sourceParameter.RefKind, name, sourceParameter.RefCustomModifiers);
         }
 
         internal override bool IsMetadataNewSlot(bool ignoreInterfaceImplementationChanges = false)
@@ -245,6 +247,11 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             return null;
         }
 
+        public override bool AreLocalsZeroed
+        {
+            get { return true; }
+        }
+
         internal override IEnumerable<Cci.SecurityAttribute> GetSecurityInformation()
         {
             throw ExceptionUtilities.Unreachable;
@@ -291,11 +298,11 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             get { return false; }
         }
 
-        public override TypeSymbol ReturnType
+        public override TypeWithAnnotations ReturnTypeWithAnnotations
         {
             get
             {
-                if (_lazyReturnType == null)
+                if ((object)_lazyReturnType == null)
                 {
                     throw new InvalidOperationException();
                 }
@@ -303,9 +310,15 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             }
         }
 
-        public override ImmutableArray<TypeSymbol> TypeArguments
+        public override FlowAnalysisAnnotations ReturnTypeFlowAnalysisAnnotations => FlowAnalysisAnnotations.None;
+
+        public override ImmutableHashSet<string> ReturnNotNullIfParameterNotNull => ImmutableHashSet<string>.Empty;
+
+        public override FlowAnalysisAnnotations FlowAnalysisAnnotations => FlowAnalysisAnnotations.None;
+
+        public override ImmutableArray<TypeWithAnnotations> TypeArgumentsWithAnnotations
         {
-            get { return _typeParameters.Cast<TypeParameterSymbol, TypeSymbol>(); }
+            get { return GetTypeParametersAsTypeArguments(); }
         }
 
         public override ImmutableArray<TypeParameterSymbol> TypeParameters
@@ -321,11 +334,6 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
         public override ImmutableArray<MethodSymbol> ExplicitInterfaceImplementations
         {
             get { return ImmutableArray<MethodSymbol>.Empty; }
-        }
-
-        public override ImmutableArray<CustomModifier> ReturnTypeCustomModifiers
-        {
-            get { return ImmutableArray<CustomModifier>.Empty; }
         }
 
         public override ImmutableArray<CustomModifier> RefCustomModifiers
@@ -416,23 +424,29 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             get { return false; }
         }
 
+        internal override bool IsDeclaredReadOnly => false;
+
+        internal override bool IsInitOnly => false;
+
         internal override ObsoleteAttributeData ObsoleteAttributeData
         {
             get { throw ExceptionUtilities.Unreachable; }
         }
+
+        internal sealed override UnmanagedCallersOnlyAttributeData GetUnmanagedCallersOnlyAttributeData(bool forceComplete) => throw ExceptionUtilities.Unreachable;
 
         internal ResultProperties ResultProperties
         {
             get { return _lazyResultProperties; }
         }
 
-        internal override void GenerateMethodBody(TypeCompilationState compilationState, DiagnosticBag diagnostics)
+        internal override void GenerateMethodBody(TypeCompilationState compilationState, BindingDiagnosticBag diagnostics)
         {
             ImmutableArray<LocalSymbol> declaredLocalsArray;
-            var body = _generateMethodBody(this, diagnostics, out declaredLocalsArray, out _lazyResultProperties);
+            var body = _generateMethodBody(this, diagnostics.DiagnosticBag, out declaredLocalsArray, out _lazyResultProperties);
             var compilation = compilationState.Compilation;
 
-            _lazyReturnType = CalculateReturnType(compilation, body);
+            _lazyReturnType = TypeWithAnnotations.Create(CalculateReturnType(compilation, body));
 
             // Can't do this until the return type has been computed.
             TypeParameterChecker.Check(this, _allTypeParameters);
@@ -449,11 +463,11 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             }
 
             // Check for use-site diagnostics (e.g. missing types in the signature).
-            DiagnosticInfo useSiteDiagnosticInfo = null;
-            this.CalculateUseSiteDiagnostic(ref useSiteDiagnosticInfo);
-            if (useSiteDiagnosticInfo != null && useSiteDiagnosticInfo.Severity == DiagnosticSeverity.Error)
+            UseSiteInfo<AssemblySymbol> useSiteInfo = default;
+            this.CalculateUseSiteDiagnostic(ref useSiteInfo);
+            if (useSiteInfo.DiagnosticInfo != null && useSiteInfo.DiagnosticInfo.Severity == DiagnosticSeverity.Error)
             {
-                diagnostics.Add(useSiteDiagnosticInfo, this.Locations[0]);
+                diagnostics.Add(useSiteInfo.DiagnosticInfo, this.Locations[0]);
                 return;
             }
 
@@ -469,7 +483,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
                         declaredLocals,
                         body,
                         declaredLocalsArray,
-                        diagnostics);
+                        diagnostics.DiagnosticBag);
 
                     // Verify local declaration names.
                     foreach (var local in declaredLocals)
@@ -484,7 +498,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
                     }
 
                     // Rewrite references to placeholder "locals".
-                    body = (BoundStatement)PlaceholderLocalRewriter.Rewrite(compilation, _container, declaredLocals, body, diagnostics);
+                    body = (BoundStatement)PlaceholderLocalRewriter.Rewrite(compilation, _container, declaredLocals, body, diagnostics.DiagnosticBag);
 
                     if (diagnostics.HasAnyErrors())
                     {
@@ -589,7 +603,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
                         compilation.Conversions,
                         _displayClassVariables,
                         body,
-                        diagnostics);
+                        diagnostics.DiagnosticBag);
 
                     if (body.HasErrors)
                     {
@@ -607,7 +621,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
                         var closureDebugInfoBuilder = ArrayBuilder<ClosureDebugInfo>.GetInstance();
                         var lambdaDebugInfoBuilder = ArrayBuilder<LambdaDebugInfo>.GetInstance();
 
-                        body = LambdaRewriter.Rewrite(
+                        body = ClosureConversion.Rewrite(
                             loweredBody: body,
                             thisType: this.SubstitutedSourceMethod.ContainingType,
                             thisParameter: _thisParameter,
@@ -707,5 +721,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
         {
             return localPosition;
         }
+
+        internal override bool IsNullableAnalysisEnabled() => false;
     }
 }

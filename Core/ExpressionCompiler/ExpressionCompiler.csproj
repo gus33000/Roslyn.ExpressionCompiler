@@ -10,6 +10,7 @@
     <MakeEverythingPublicAssemblies>Microsoft.CodeAnalysis</MakeEverythingPublicAssemblies>
     <MakeEverythingPublicIVTString>$(AssemblyName)</MakeEverythingPublicIVTString>
     <DefineConstants>$(DefineConstants);EXPRESSIONCOMPILER</DefineConstants>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <Import Project="$(MSBuildProjectDirectory)\..\..\..\..\..\Build\MakeEverythingPublic\MakeEverythingPublic.tasks" />

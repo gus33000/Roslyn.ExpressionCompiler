@@ -28,7 +28,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             if (hasThisParameter)
             {
                 _thisParameter = MakeParameterSymbol(-1, GeneratedNames.ThisProxyFieldName(), thisParameter);
-                Debug.Assert(_thisParameter.Type == originalMethod.ContainingType);
+                Debug.Assert(TypeSymbol.Equals(_thisParameter.Type, originalMethod.ContainingType, TypeCompareKind.ConsiderEverything));
             }
 
             foreach (var p in originalMethod.Parameters)
@@ -45,11 +45,15 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
 
         private ParameterSymbol MakeParameterSymbol(int ordinal, string name, ParameterSymbol sourceParameter)
         {
-            return SynthesizedParameterSymbol.Create(this, sourceParameter.Type, ordinal, sourceParameter.RefKind, name, sourceParameter.CustomModifiers, sourceParameter.RefCustomModifiers);
+            return SynthesizedParameterSymbol.Create(this, sourceParameter.TypeWithAnnotations, ordinal, sourceParameter.RefKind, name, sourceParameter.RefCustomModifiers, null, sourceParameter.IsNullChecked);
         }
 
         public override MethodKind MethodKind => _originalMethod.MethodKind;
         public override int Arity => _originalMethod.Arity;
+        #nullable enable
+        internal override UnmanagedCallersOnlyAttributeData? GetUnmanagedCallersOnlyAttributeData(bool forceComplete) =>
+            _originalMethod.GetUnmanagedCallersOnlyAttributeData(forceComplete);
+        #nullable disable
         public override bool IsExtensionMethod => _originalMethod.IsExtensionMethod;
         internal override bool HasSpecialName => _originalMethod.HasSpecialName;
         internal override MethodImplAttributes ImplementationAttributes => _originalMethod.ImplementationAttributes;
@@ -61,12 +65,16 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
         public override bool ReturnsVoid => _originalMethod.ReturnsVoid;
         public override bool IsAsync => _originalMethod.IsAsync;
         public override RefKind RefKind => _originalMethod.RefKind;
-        public override TypeSymbol ReturnType => _originalMethod.ReturnType;
-        public override ImmutableArray<TypeSymbol> TypeArguments => _originalMethod.TypeArguments;
+        public override TypeWithAnnotations ReturnTypeWithAnnotations => _originalMethod.ReturnTypeWithAnnotations;
+        public override FlowAnalysisAnnotations ReturnTypeFlowAnalysisAnnotations => _originalMethod.ReturnTypeFlowAnalysisAnnotations;
+        public override ImmutableHashSet<string> ReturnNotNullIfParameterNotNull => _originalMethod.ReturnNotNullIfParameterNotNull;
+        public override FlowAnalysisAnnotations FlowAnalysisAnnotations => _originalMethod.FlowAnalysisAnnotations;
+        public override ImmutableArray<TypeWithAnnotations> TypeArgumentsWithAnnotations => _originalMethod.TypeArgumentsWithAnnotations;
         public override ImmutableArray<TypeParameterSymbol> TypeParameters => _originalMethod.TypeParameters;
         public override ImmutableArray<ParameterSymbol> Parameters => _parameters;
+        internal override bool IsDeclaredReadOnly => _originalMethod.IsDeclaredReadOnly;
+        internal override bool IsInitOnly => _originalMethod.IsInitOnly;
         public override ImmutableArray<MethodSymbol> ExplicitInterfaceImplementations => _originalMethod.ExplicitInterfaceImplementations;
-        public override ImmutableArray<CustomModifier> ReturnTypeCustomModifiers => _originalMethod.ReturnTypeCustomModifiers;
         public override ImmutableArray<CustomModifier> RefCustomModifiers => _originalMethod.RefCustomModifiers;
         public override Symbol AssociatedSymbol => _originalMethod.AssociatedSymbol;
         internal override CallingConvention CallingConvention => _originalMethod.CallingConvention;
@@ -89,6 +97,8 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
         internal override IEnumerable<SecurityAttribute> GetSecurityInformation() => _originalMethod.GetSecurityInformation();
         internal override ImmutableArray<string> GetAppliedConditionalSymbols() => _originalMethod.GetAppliedConditionalSymbols();
         internal override int CalculateLocalSyntaxOffset(int localPosition, SyntaxTree localTree) => _originalMethod.CalculateLocalSyntaxOffset(localPosition, localTree);
+        public override bool AreLocalsZeroed => _originalMethod.AreLocalsZeroed;
+        internal override bool IsNullableAnalysisEnabled() => _originalMethod.IsNullableAnalysisEnabled();
         internal override bool TryGetThisParameter(out ParameterSymbol thisParameter)
         {
             thisParameter = _thisParameter;

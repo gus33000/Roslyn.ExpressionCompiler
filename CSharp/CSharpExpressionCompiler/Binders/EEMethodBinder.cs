@@ -1,4 +1,8 @@
-﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+#nullable disable
 
 using System;
 using System.Collections.Generic;
@@ -18,7 +22,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
         private readonly ImmutableArray<ParameterSymbol> _targetParameters;
         private readonly Binder _sourceBinder;
 
-        internal EEMethodBinder(CompilerKind compiler, EEMethodSymbol method, MethodSymbol containingMethod, Binder next) : base(next)
+        internal EEMethodBinder(CompilerKind compiler, EEMethodSymbol method, MethodSymbol containingMethod, Binder next) : base(next, next.Flags | BinderFlags.InEEMethodBinder)
         {
             // There are a lot of method symbols floating around and we're doing some subtle things with them.
             //   1) method is the EEMethodSymbol that we're going to synthesize and hand to the debugger to evaluate.
@@ -29,7 +33,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             //      a display class.  Any type parameters will have been replaced with the corresponding type parameters
             //      from (1).
             // So why do we need all these methods?
-            //   1) gives us the parameters that we need to actually bind to (it's no good to bind to the symbols 
+            //   1) gives us the parameters that we need to actually bind to (it's no good to bind to the symbols
             //      owned by (2) or (3)).  Also, it happens to contain (3), so we don't need to pass (3) explicitly.
             //   2) is where we want to pretend we're binding expressions, so we make it the containing symbol of
             //      this binder.
@@ -44,9 +48,9 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             _sourceBinder = new InMethodBinder(substitutedSourceMethod, new BuckStopsHereBinder(next.Compilation));
         }
 
-        internal override void LookupSymbolsInSingleBinder(LookupResult result, string name, int arity, ConsList<Symbol> basesBeingResolved, LookupOptions options, Binder originalBinder, bool diagnose, ref HashSet<DiagnosticInfo> useSiteDiagnostics)
+        internal override void LookupSymbolsInSingleBinder(LookupResult result, string name, int arity, ConsList<TypeSymbol> basesBeingResolved, LookupOptions options, Binder originalBinder, bool diagnose, ref CompoundUseSiteInfo<AssemblySymbol> useSiteInfo)
         {
-            _sourceBinder.LookupSymbolsInSingleBinder(result, name, arity, basesBeingResolved, options, this, diagnose, ref useSiteDiagnostics);
+            _sourceBinder.LookupSymbolsInSingleBinder(result, name, arity, basesBeingResolved, options, this, diagnose, ref useSiteInfo);
 
             var symbols = result.Symbols;
             for (int i = 0; i < symbols.Count; i++)

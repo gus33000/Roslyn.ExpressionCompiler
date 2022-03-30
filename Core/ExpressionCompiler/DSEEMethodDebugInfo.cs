@@ -8,6 +8,7 @@ using System.Diagnostics;
 using Microsoft.CodeAnalysis.Debugging;
 using Microsoft.VisualStudio.Debugger.Evaluation.ClrCompilation;
 using Microsoft.CodeAnalysis.PooledObjects;
+using Microsoft.CodeAnalysis.Symbols;
 
 namespace Microsoft.CodeAnalysis.ExpressionEvaluator.DnSpy
 {
@@ -66,7 +67,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator.DnSpy
         public ImmutableArray<ImmutableArray<DSEEImportRecord>> ImportRecordGroups;
         public ImmutableArray<DSEEExternAliasRecord> ExternAliasRecords;
         public ImmutableDictionary<int, ImmutableArray<bool>> DynamicLocalMap;
-        public ImmutableDictionary<int, ImmutableArray<string>> TupleLocalMap;
+        public ImmutableDictionary<int, ImmutableArray<string?>>? TupleLocalMap;
         public string DefaultNamespaceName;
         public ImmutableArray<string> LocalVariableNames;
         public ImmutableArray<string> ParameterNames;
@@ -133,8 +134,8 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator.DnSpy
         public static MethodDebugInfo<TTypeSymbol, TLocalSymbol> ToMethodDebugInfo<TTypeSymbol, TLocalSymbol>(
             this DSEEMethodDebugInfo info,
             EESymbolProvider<TTypeSymbol, TLocalSymbol> symbolProvider)
-            where TTypeSymbol : class, ITypeSymbol
-            where TLocalSymbol : class
+            where TTypeSymbol : class, ITypeSymbolInternal
+            where TLocalSymbol : class, ILocalSymbolInternal
         {
             return new MethodDebugInfo<TTypeSymbol, TLocalSymbol>(
                 info.HoistedLocalScopeRecords,
@@ -154,8 +155,8 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator.DnSpy
         private static ImmutableArray<ImmutableArray<ImportRecord>> Convert<TTypeSymbol, TLocalSymbol>(
             ImmutableArray<ImmutableArray<DSEEImportRecord>> importRecordGroups,
             EESymbolProvider<TTypeSymbol, TLocalSymbol> symbolProvider)
-            where TTypeSymbol : class, ITypeSymbol
-            where TLocalSymbol : class
+            where TTypeSymbol : class, ITypeSymbolInternal
+            where TLocalSymbol : class, ILocalSymbolInternal
         {
             if (importRecordGroups.IsDefaultOrEmpty)
             {
@@ -240,8 +241,8 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator.DnSpy
         private static ImmutableArray<ExternAliasRecord> Convert<TTypeSymbol, TLocalSymbol>(
             ImmutableArray<DSEEExternAliasRecord> externAliasRecords,
             EESymbolProvider<TTypeSymbol, TLocalSymbol> symbolProvider)
-            where TTypeSymbol : class, ITypeSymbol
-            where TLocalSymbol : class
+            where TTypeSymbol : class, ITypeSymbolInternal
+            where TLocalSymbol : class, ILocalSymbolInternal
         {
             if (externAliasRecords.IsDefaultOrEmpty)
             {
@@ -268,8 +269,8 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator.DnSpy
         private static ImmutableArray<TLocalSymbol> Convert<TTypeSymbol, TLocalSymbol>(
             ImmutableArray<DSEELocalConstant> localConstants,
             EESymbolProvider<TTypeSymbol, TLocalSymbol> symbolProvider)
-            where TTypeSymbol : class, ITypeSymbol
-            where TLocalSymbol : class
+            where TTypeSymbol : class, ITypeSymbolInternal
+            where TLocalSymbol : class, ILocalSymbolInternal
         {
             Debug.Assert(localConstants.IsDefaultOrEmpty);
             return ImmutableArray<TLocalSymbol>.Empty;

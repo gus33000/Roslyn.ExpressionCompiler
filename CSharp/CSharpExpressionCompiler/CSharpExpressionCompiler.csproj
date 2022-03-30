@@ -8,6 +8,7 @@
     <AssemblyOriginatorKeyFile>..\..\..\..\..\dnSpy.snk</AssemblyOriginatorKeyFile>
     <MakeEverythingPublicAssemblies>Microsoft.CodeAnalysis;Microsoft.CodeAnalysis.CSharp</MakeEverythingPublicAssemblies>
     <MakeEverythingPublicIVTString>$(AssemblyName)</MakeEverythingPublicIVTString>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <Import Project="$(MSBuildProjectDirectory)\..\..\..\..\..\Build\MakeEverythingPublic\MakeEverythingPublic.tasks" />

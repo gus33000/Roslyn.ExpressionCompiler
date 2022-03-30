@@ -1,4 +1,6 @@
-﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections.Immutable;
@@ -15,13 +17,16 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
     internal partial class MethodDebugInfo<TTypeSymbol, TLocalSymbol>
     {
         /// <exception cref="BadImageFormatException">Invalid data format.</exception>
-        public static MethodDebugInfo<TTypeSymbol, TLocalSymbol> ReadFromPortable(MetadataReader reader, int methodToken, int ilOffset, EESymbolProvider<TTypeSymbol, TLocalSymbol> symbolProvider, bool isVisualBasicMethod)
+        public static MethodDebugInfo<TTypeSymbol, TLocalSymbol> ReadFromPortable(
+            MetadataReader reader,
+            int methodToken,
+            int ilOffset,
+            EESymbolProvider<TTypeSymbol, TLocalSymbol>? symbolProvider,
+            bool isVisualBasicMethod)
         {
-            string defaultNamespace;
-            ImmutableArray<HoistedLocalScopeRecord> hoistedLocalScopes;
             ImmutableDictionary<int, string> hoistedVarFieldTokenToNamesMap = ImmutableDictionary<int, string>.Empty;
-            ImmutableDictionary<int, ImmutableArray<bool>> dynamicLocalMap;
-            ImmutableDictionary<int, ImmutableArray<string>> tupleLocalMap;
+            ImmutableDictionary<int, ImmutableArray<bool>>? dynamicLocalMap;
+            ImmutableDictionary<int, ImmutableArray<string?>>? tupleLocalMap;
             ImmutableArray<ImmutableArray<ImportRecord>> importGroups;
             ImmutableArray<ExternAliasRecord> externAliases;
             ImmutableArray<string> localVariableNames;
@@ -32,21 +37,35 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
 
             var methodHandle = GetDeltaRelativeMethodDefinitionHandle(reader, methodToken);
 
-            ReadLocalScopeInformation(
-                reader,
-                methodHandle,
-                ilOffset,
-                symbolProvider,
-                isVisualBasicMethod,
-                out importGroups,
-                out externAliases,
-                out localVariableNames,
-                out dynamicLocalMap,
-                out tupleLocalMap,
-                out localConstants,
-                out reuseSpan);
+            // TODO: only null in DTEE case where we looking for default namesapace
+            if (symbolProvider != null)
+            {
+                ReadLocalScopeInformation(
+                    reader,
+                    methodHandle,
+                    ilOffset,
+                    symbolProvider,
+                    isVisualBasicMethod,
+                    out importGroups,
+                    out externAliases,
+                    out localVariableNames,
+                    out dynamicLocalMap,
+                    out tupleLocalMap,
+                    out localConstants,
+                    out reuseSpan);
+            }
+            else
+            {
+                dynamicLocalMap = null;
+                tupleLocalMap = null;
+                importGroups = ImmutableArray<ImmutableArray<ImportRecord>>.Empty;
+                externAliases = ImmutableArray<ExternAliasRecord>.Empty;
+                localVariableNames = ImmutableArray<string>.Empty;
+                localConstants = ImmutableArray<TLocalSymbol>.Empty;
+                reuseSpan = ILSpan.MaxValue;
+            }
 
-            ReadMethodCustomDebugInformation(reader, methodHandle, out hoistedLocalScopes, out defaultNamespace);
+            ReadMethodCustomDebugInformation(reader, methodHandle, out var hoistedLocalScopes, out var defaultNamespace);
 
             return new MethodDebugInfo<TTypeSymbol, TLocalSymbol>(
                 hoistedLocalScopes,
@@ -64,8 +83,8 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
         }
 
         /// <summary>
-        /// Maps global method token to a handle local to the current delta PDB. 
-        /// Debug tables referring to methods currently use local handles, not global handles. 
+        /// Maps global method token to a handle local to the current delta PDB.
+        /// Debug tables referring to methods currently use local handles, not global handles.
         /// See https://github.com/dotnet/roslyn/issues/16286
         /// </summary>
         private static MethodDefinitionHandle GetDeltaRelativeMethodDefinitionHandle(MetadataReader reader, int methodToken)
@@ -80,7 +99,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             var globalDebugHandle = globalHandle.ToDebugInformationHandle();
 
             int rowId = 1;
-            foreach (EntityHandle handle in reader.GetEditAndContinueMapEntries())
+            foreach (var handle in reader.GetEditAndContinueMapEntries())
             {
                 if (handle.Kind == HandleKind.MethodDebugInformation)
                 {
@@ -106,16 +125,16 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             out ImmutableArray<ImmutableArray<ImportRecord>> importGroups,
             out ImmutableArray<ExternAliasRecord> externAliases,
             out ImmutableArray<string> localVariableNames,
-            out ImmutableDictionary<int, ImmutableArray<bool>> dynamicLocalMap,
-            out ImmutableDictionary<int, ImmutableArray<string>> tupleLocalMap,
+            out ImmutableDictionary<int, ImmutableArray<bool>>? dynamicLocalMap,
+            out ImmutableDictionary<int, ImmutableArray<string?>>? tupleLocalMap,
             out ImmutableArray<TLocalSymbol> localConstants,
             out ILSpan reuseSpan)
         {
             var localVariableNamesBuilder = ArrayBuilder<string>.GetInstance();
             var localConstantsBuilder = ArrayBuilder<TLocalSymbol>.GetInstance();
 
-            ImmutableDictionary<int, ImmutableArray<bool>>.Builder lazyDynamicLocalsBuilder = null;
-            ImmutableDictionary<int, ImmutableArray<string>>.Builder lazyTupleLocalsBuilder = null;
+            ImmutableDictionary<int, ImmutableArray<bool>>.Builder? lazyDynamicLocalsBuilder = null;
+            ImmutableDictionary<int, ImmutableArray<string?>>.Builder? lazyTupleLocalsBuilder = null;
 
             var innerMostImportScope = default(ImportScopeHandle);
             uint reuseSpanStart = 0;
@@ -162,14 +181,14 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                             var dynamicFlags = ReadDynamicCustomDebugInformation(reader, variableHandle);
                             if (!dynamicFlags.IsDefault)
                             {
-                                lazyDynamicLocalsBuilder = lazyDynamicLocalsBuilder ?? ImmutableDictionary.CreateBuilder<int, ImmutableArray<bool>>();
+                                lazyDynamicLocalsBuilder ??= ImmutableDictionary.CreateBuilder<int, ImmutableArray<bool>>();
                                 lazyDynamicLocalsBuilder[variable.Index] = dynamicFlags;
                             }
 
                             var tupleElementNames = ReadTupleCustomDebugInformation(reader, variableHandle);
                             if (!tupleElementNames.IsDefault)
                             {
-                                lazyTupleLocalsBuilder = lazyTupleLocalsBuilder ?? ImmutableDictionary.CreateBuilder<int, ImmutableArray<string>>();
+                                lazyTupleLocalsBuilder ??= ImmutableDictionary.CreateBuilder<int, ImmutableArray<string?>>();
                                 lazyTupleLocalsBuilder[variable.Index] = tupleElementNames;
                             }
                         }
@@ -179,10 +198,8 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                         {
                             var constant = reader.GetLocalConstant(constantHandle);
 
-                            TTypeSymbol typeSymbol;
-                            ConstantValue value;
                             var sigReader = reader.GetBlobReader(constant.Signature);
-                            symbolProvider.DecodeLocalConstant(ref sigReader, out typeSymbol, out value);
+                            symbolProvider.DecodeLocalConstant(ref sigReader, out var typeSymbol, out var value);
 
                             var name = reader.GetString(constant.Name);
                             var dynamicFlags = ReadDynamicCustomDebugInformation(reader, constantHandle);
@@ -266,7 +283,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 }
 
                 // Portable PDBs represent project-level scope as the root of the chain of scopes.
-                // This scope might contain aliases for assembly references, but is not considered 
+                // This scope might contain aliases for assembly references, but is not considered
                 // to be part of imports groups.
                 if (isVisualBasicMethod || !importScope.Parent.IsNil)
                 {
@@ -368,46 +385,43 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             out ImmutableArray<HoistedLocalScopeRecord> hoistedLocalScopes,
             out string defaultNamespace)
         {
-            CustomDebugInformation info;
-
-            hoistedLocalScopes = TryGetCustomDebugInformation(reader, methodHandle, PortableCustomDebugInfoKinds.StateMachineHoistedLocalScopes, out info) ?
+            hoistedLocalScopes = TryGetCustomDebugInformation(reader, methodHandle, PortableCustomDebugInfoKinds.StateMachineHoistedLocalScopes, out var info) ?
                 DecodeHoistedLocalScopes(reader.GetBlobReader(info.Value)) :
                 ImmutableArray<HoistedLocalScopeRecord>.Empty;
 
             // TODO: consider looking this up once per module (not for every method)
             defaultNamespace = TryGetCustomDebugInformation(reader, EntityHandle.ModuleDefinition, PortableCustomDebugInfoKinds.DefaultNamespace, out info) ?
                 DecodeDefaultNamespace(reader.GetBlobReader(info.Value)) :
-                null;
-            defaultNamespace = defaultNamespace ?? "";
+                "";
         }
 
         /// <exception cref="BadImageFormatException">Invalid data format.</exception>
         private static ImmutableArray<bool> ReadDynamicCustomDebugInformation(MetadataReader reader, EntityHandle variableOrConstantHandle)
         {
-            CustomDebugInformation info;
-            if (TryGetCustomDebugInformation(reader, variableOrConstantHandle, PortableCustomDebugInfoKinds.DynamicLocalVariables, out info))
+            if (TryGetCustomDebugInformation(reader, variableOrConstantHandle, PortableCustomDebugInfoKinds.DynamicLocalVariables, out var info))
             {
                 return DecodeDynamicFlags(reader.GetBlobReader(info.Value));
             }
-            return default(ImmutableArray<bool>);
+
+            return default;
         }
 
         /// <exception cref="BadImageFormatException">Invalid data format.</exception>
-        private static ImmutableArray<string> ReadTupleCustomDebugInformation(MetadataReader reader, EntityHandle variableOrConstantHandle)
+        private static ImmutableArray<string?> ReadTupleCustomDebugInformation(MetadataReader reader, EntityHandle variableOrConstantHandle)
         {
-            CustomDebugInformation info;
-            if (TryGetCustomDebugInformation(reader, variableOrConstantHandle, PortableCustomDebugInfoKinds.TupleElementNames, out info))
+            if (TryGetCustomDebugInformation(reader, variableOrConstantHandle, PortableCustomDebugInfoKinds.TupleElementNames, out var info))
             {
                 return DecodeTupleElementNames(reader.GetBlobReader(info.Value));
             }
-            return default(ImmutableArray<string>);
+
+            return default;
         }
 
         /// <exception cref="BadImageFormatException">Invalid data format.</exception>
         private static bool TryGetCustomDebugInformation(MetadataReader reader, EntityHandle handle, Guid kind, out CustomDebugInformation customDebugInfo)
         {
             bool foundAny = false;
-            customDebugInfo = default(CustomDebugInformation);
+            customDebugInfo = default;
             foreach (var infoHandle in reader.GetCustomDebugInformation(handle))
             {
                 var info = reader.GetCustomDebugInformation(infoHandle);
@@ -443,9 +457,9 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
         }
 
         /// <exception cref="BadImageFormatException">Invalid data format.</exception>
-        private static ImmutableArray<string> DecodeTupleElementNames(BlobReader reader)
+        private static ImmutableArray<string?> DecodeTupleElementNames(BlobReader reader)
         {
-            var builder = ArrayBuilder<string>.GetInstance();
+            var builder = ArrayBuilder<string?>.GetInstance();
             while (reader.RemainingBytes > 0)
             {
                 var value = ReadUtf8String(ref reader);
