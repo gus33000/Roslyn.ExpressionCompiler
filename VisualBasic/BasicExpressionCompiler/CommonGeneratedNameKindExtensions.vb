@@ -66,7 +66,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator
                     Return hiddenKind
                 Case CommonGeneratedNameKind.AnonymousTypeField
                     Return hiddenKind
-                Case CommonGeneratedNameKind.Deprecated_AnonymousTypeTypeParameter
+                Case CommonGeneratedNameKind.AnonymousTypeTypeParameter
                     Return hiddenKind
                 Case CommonGeneratedNameKind.AutoPropertyBackingField
                     Return hiddenKind
@@ -87,6 +87,12 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator
                 Case CommonGeneratedNameKind.AsyncBuilderField
                     Return hiddenKind
                 Case CommonGeneratedNameKind.StateMachineDisposingField
+                    Return hiddenKind
+                Case CommonGeneratedNameKind.AsyncIteratorPromiseOfValueOrEndBackingField
+                    Return hiddenKind
+                Case CommonGeneratedNameKind.DisposeModeField
+                    Return hiddenKind
+                Case CommonGeneratedNameKind.CombinedTokensField
                     Return hiddenKind
                 Case Else
                     Debug.Fail($"Unknown kind: {kind}")

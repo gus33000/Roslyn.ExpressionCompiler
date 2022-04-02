@@ -59,7 +59,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                             // If this assembly declares System.Object, assume it is the corlib.
                             // (Note, it is order dependent which assembly we treat as corlib
                             // if there are multiple assemblies that meet these requirements.
-                            // That should be acceptable for evaluating expressions in the EE though.) 
+                            // That should be acceptable for evaluating expressions in the EE though.)
                             if (reader.DeclaresTheObjectClass())
                             {
                                 corLibrary = reader.ReadAssemblyIdentityOrThrow();
@@ -394,7 +394,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             var assembly = typeof(EvaluationContextBase).GetTypeInfo().Assembly;
             using (var stream = assembly.GetManifestResourceStream("Microsoft.CodeAnalysis.ExpressionEvaluator.Resources.WindowsProxy.winmd"))
             {
-                var bytes = new byte[stream.Length];
+                var bytes = new byte[stream!.Length];
                 using (var memoryStream = new MemoryStream(bytes))
                 {
                     stream.CopyTo(memoryStream);

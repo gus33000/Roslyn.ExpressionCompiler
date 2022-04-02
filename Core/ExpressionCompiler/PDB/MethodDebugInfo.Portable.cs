@@ -30,7 +30,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             ImmutableArray<ImmutableArray<ImportRecord>> importGroups;
             ImmutableArray<ExternAliasRecord> externAliases;
             ImmutableArray<string> localVariableNames;
-            ImmutableArray<string> parameterNames = default;
+            ImmutableArray<string?> parameterNames = default;
             ImmutableArray<TLocalSymbol> localConstants;
             ILSpan reuseSpan;
             CompilerKind compiler = isVisualBasicMethod ? CompilerKind.MicrosoftVisualBasic : CompilerKind.MicrosoftCSharp;

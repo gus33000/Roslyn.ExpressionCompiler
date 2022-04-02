@@ -123,7 +123,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
 
         internal static void Decode(
             Guid payloadTypeId,
-            ReadOnlyCollection<byte> payload,
+            ReadOnlyCollection<byte>? payload,
             out ReadOnlyCollection<byte>? dynamicFlags,
             out ReadOnlyCollection<string?>? tupleElementNames)
         {

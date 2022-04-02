@@ -22,7 +22,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
         public bool Equals(MetadataContextId other)
             => ModuleVersionId.Equals(other.ModuleVersionId);
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
             => obj is MetadataContextId && Equals((MetadataContextId)obj);
 
         public override int GetHashCode()

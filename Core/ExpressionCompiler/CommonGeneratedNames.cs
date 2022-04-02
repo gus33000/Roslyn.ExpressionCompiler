@@ -66,7 +66,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
         Deprecated_InitializerLocal,
         //TransparentIdentifier,
         AnonymousTypeField,
-        Deprecated_AnonymousTypeTypeParameter,
+        AnonymousTypeTypeParameter,
         AutoPropertyBackingField,
         IteratorCurrentThreadIdField,
         IteratorFinallyMethod,
@@ -78,6 +78,9 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
         //HoistedSynthesizedLocalField,
         AsyncBuilderField,
         //AwaiterField,
+        AsyncIteratorPromiseOfValueOrEndBackingField,
+        DisposeModeField,
+        CombinedTokensField,
 
         // mcs
         StateMachineDisposingField,
@@ -122,13 +125,13 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
         protected abstract CommonGeneratedNameKind GetKind(string name);
         protected abstract bool? IsSynthesizedLocalName(string name);
         protected abstract bool TryParseSlotIndex(string fieldName, out int slotIndex);
-        protected abstract bool TryParseSourceMethodNameFromGeneratedName(string generatedName, CommonGeneratedNameKind requiredKind, out string methodName);
-        protected abstract bool TryParseGeneratedName(string name, out CommonGeneratedNameKind kind, out string part);
-        protected abstract bool TryParseHoistedUserVariableName(string proxyName, out string variableName);
-        protected abstract bool TryParseStateMachineHoistedUserVariableName(string proxyName, out string variableName, out int index);
-        protected abstract bool TryParseStateMachineTypeName(string stateMachineTypeName, out string methodName);
-        protected abstract bool TryParseStaticLocalFieldName(string fieldName, out string methodName, out string methodSignature, out string localName);
-        protected abstract bool TryGetUnmangledTypeParameterName(string typeParameterName, out string unmangedTypeParameterName);
+        protected abstract bool TryParseSourceMethodNameFromGeneratedName(string generatedName, CommonGeneratedNameKind requiredKind, out string? methodName);
+        protected abstract bool TryParseGeneratedName(string name, out CommonGeneratedNameKind kind, out string? part);
+        protected abstract bool TryParseHoistedUserVariableName(string proxyName, out string? variableName);
+        protected abstract bool TryParseStateMachineHoistedUserVariableName(string proxyName, out string? variableName, out int index);
+        protected abstract bool TryParseStateMachineTypeName(string stateMachineTypeName, out string? methodName);
+        protected abstract bool TryParseStaticLocalFieldName(string fieldName, out string? methodName, out string? methodSignature, out string? localName);
+        protected abstract bool TryGetUnmangledTypeParameterName(string typeParameterName, out string? unmangedTypeParameterName);
         protected abstract bool? IsDisplayClassInstance(string fieldType, string fieldName);
 
         public static CommonGeneratedNameKind GetKind(CompilerKind compiler, string name)
@@ -164,7 +167,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             return false;
         }
 
-        public static bool TryParseSourceMethodNameFromGeneratedName(CompilerKind compiler, string generatedName, CommonGeneratedNameKind requiredKind, out string methodName)
+        public static bool TryParseSourceMethodNameFromGeneratedName(CompilerKind compiler, string generatedName, CommonGeneratedNameKind requiredKind, out string? methodName)
         {
             foreach (var g in GetGeneratedNames(compiler))
             {
@@ -175,7 +178,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             return false;
         }
 
-        public static bool TryParseGeneratedName(CompilerKind compiler, string name, out CommonGeneratedNameKind kind, out string part)
+        public static bool TryParseGeneratedName(CompilerKind compiler, string name, out CommonGeneratedNameKind kind, out string? part)
         {
             foreach (var g in GetGeneratedNames(compiler))
             {
@@ -188,7 +191,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             return false;
         }
 
-        public static bool TryParseHoistedUserVariableName(CompilerKind compiler, string proxyName, out string variableName)
+        public static bool TryParseHoistedUserVariableName(CompilerKind compiler, string proxyName, out string? variableName)
         {
             foreach (var g in GetGeneratedNames(compiler))
             {
@@ -199,7 +202,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             return false;
         }
 
-        public static bool TryParseStateMachineHoistedUserVariableName(CompilerKind compiler, string proxyName, out string variableName, out int index)
+        public static bool TryParseStateMachineHoistedUserVariableName(CompilerKind compiler, string proxyName, out string? variableName, out int index)
         {
             foreach (var g in GetGeneratedNames(compiler))
             {
@@ -211,7 +214,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             return false;
         }
 
-        public static bool TryParseStateMachineTypeName(CompilerKind compiler, string stateMachineTypeName, out string methodName)
+        public static bool TryParseStateMachineTypeName(CompilerKind compiler, string stateMachineTypeName, out string? methodName)
         {
             foreach (var g in GetGeneratedNames(compiler))
             {
@@ -222,7 +225,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             return false;
         }
 
-        public static bool TryParseStaticLocalFieldName(CompilerKind compiler, string fieldName, out string methodName, out string methodSignature, out string localName)
+        public static bool TryParseStaticLocalFieldName(CompilerKind compiler, string fieldName, out string? methodName, out string? methodSignature, out string? localName)
         {
             foreach (var g in GetGeneratedNames(compiler))
             {
@@ -235,7 +238,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             return false;
         }
 
-        public static string GetUnmangledTypeParameterName(CompilerKind compiler, string typeParameterName)
+        public static string? GetUnmangledTypeParameterName(CompilerKind compiler, string typeParameterName)
         {
             foreach (var g in GetGeneratedNames(compiler))
             {
@@ -262,10 +265,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
 
             protected override CommonGeneratedNameKind GetKind(string name)
             {
-                CommonGeneratedNameKind kind;
-                int openBracketOffset;
-                int closeBracketOffset;
-                return TryParseGeneratedName(name, out kind, out openBracketOffset, out closeBracketOffset) ? kind : CommonGeneratedNameKind.None;
+                return TryParseGeneratedName(name, out var kind, out _, out _) ? kind : CommonGeneratedNameKind.None;
             }
 
             internal static bool TryParseGeneratedName(
@@ -394,7 +394,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 return false;
             }
 
-            protected override bool TryParseSourceMethodNameFromGeneratedName(string generatedName, CommonGeneratedNameKind requiredKind, out string methodName)
+            protected override bool TryParseSourceMethodNameFromGeneratedName(string generatedName, CommonGeneratedNameKind requiredKind, out string? methodName)
             {
                 int openBracketOffset;
                 int closeBracketOffset;
@@ -421,7 +421,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 return true;
             }
 
-            protected override bool TryParseGeneratedName(string name, out CommonGeneratedNameKind kind, out string part)
+            protected override bool TryParseGeneratedName(string name, out CommonGeneratedNameKind kind, out string? part)
             {
                 bool result = TryParseGeneratedName(name, out kind, out int openBracketOffset, out int closeBracketOffset);
                 switch (kind)
@@ -437,13 +437,13 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 return result;
             }
 
-            protected override bool TryParseHoistedUserVariableName(string proxyName, out string variableName)
+            protected override bool TryParseHoistedUserVariableName(string proxyName, out string? variableName)
             {
                 variableName = null;
                 return false;
             }
 
-            protected override bool TryParseStateMachineHoistedUserVariableName(string proxyName, out string variableName, out int index)
+            protected override bool TryParseStateMachineHoistedUserVariableName(string proxyName, out string? variableName, out int index)
             {
                 TryParseGeneratedName(proxyName, out var kind, out int openBracketOffset, out int closeBracketOffset);
                 if (kind == CommonGeneratedNameKind.HoistedLocalField)
@@ -458,7 +458,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 return false;
             }
 
-            protected override bool TryParseStateMachineTypeName(string stateMachineTypeName, out string methodName)
+            protected override bool TryParseStateMachineTypeName(string stateMachineTypeName, out string? methodName)
             {
                 TryParseGeneratedName(stateMachineTypeName, out var kind, out int openBracketOffset, out int closeBracketOffset);
                 switch (kind)
@@ -472,7 +472,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 }
             }
 
-            protected override bool TryParseStaticLocalFieldName(string fieldName, out string methodName, out string methodSignature, out string localName)
+            protected override bool TryParseStaticLocalFieldName(string fieldName, out string? methodName, out string? methodSignature, out string? localName)
             {
                 methodName = null;
                 methodSignature = null;
@@ -480,7 +480,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 return false;
             }
 
-            protected override bool TryGetUnmangledTypeParameterName(string typeParameterName, out string unmangedTypeParameterName)
+            protected override bool TryGetUnmangledTypeParameterName(string typeParameterName, out string? unmangedTypeParameterName)
             {
                 unmangedTypeParameterName = null;
                 return false;
@@ -488,7 +488,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
 
             protected override bool? IsDisplayClassInstance(string fieldType, string fieldName)
             {
-                TryParseGeneratedName(fieldName, out var fieldKind, out var part);
+                TryParseGeneratedName(fieldName, out var fieldKind, out _);
 
                 switch (fieldKind)
                 {
@@ -519,10 +519,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
 
             protected override CommonGeneratedNameKind GetKind(string name)
             {
-                CommonGeneratedNameKind kind;
-                int openBracketOffset;
-                int closeBracketOffset;
-                return TryParseGeneratedName(name, out kind, out openBracketOffset, out closeBracketOffset) ? kind : CommonGeneratedNameKind.None;
+                return TryParseGeneratedName(name, out var kind, out _, out _) ? kind : CommonGeneratedNameKind.None;
             }
 
             protected override bool? IsSynthesizedLocalName(string name)
@@ -531,7 +528,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             }
 
             // Extracts the slot index from a name of a field that stores hoisted variables or awaiters.
-            // Such a name ends with "__{slot index + 1}". 
+            // Such a name ends with "__{slot index + 1}".
             // Returned slot index is >= 0.
             protected override bool TryParseSlotIndex(string fieldName, out int slotIndex)
             {
@@ -552,12 +549,9 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 return false;
             }
 
-            protected override bool TryParseSourceMethodNameFromGeneratedName(string generatedName, CommonGeneratedNameKind requiredKind, out string methodName)
+            protected override bool TryParseSourceMethodNameFromGeneratedName(string generatedName, CommonGeneratedNameKind requiredKind, out string? methodName)
             {
-                int openBracketOffset;
-                int closeBracketOffset;
-                CommonGeneratedNameKind kind;
-                if (!TryParseGeneratedName(generatedName, out kind, out openBracketOffset, out closeBracketOffset))
+                if (!TryParseGeneratedName(generatedName, out var kind, out var openBracketOffset, out var closeBracketOffset))
                 {
                     methodName = null;
                     return false;
@@ -572,14 +566,12 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 methodName = generatedName.Substring(openBracketOffset + 1, closeBracketOffset - openBracketOffset - 1);
 
                 if (GeneratedNameKindExtensions.IsTypeName(kind))
-                {
                     methodName = methodName.Replace(DotReplacementInTypeNames, '.');
-                }
 
                 return true;
             }
 
-            protected override bool TryParseGeneratedName(string name, out CommonGeneratedNameKind kind, out string part)
+            protected override bool TryParseGeneratedName(string name, out CommonGeneratedNameKind kind, out string? part)
             {
                 bool result = TryParseGeneratedName(name, out kind, out int openBracketOffset, out int closeBracketOffset);
                 switch (kind)
@@ -595,13 +587,13 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 return result;
             }
 
-            protected override bool TryParseHoistedUserVariableName(string proxyName, out string variableName)
+            protected override bool TryParseHoistedUserVariableName(string proxyName, out string? variableName)
             {
                 variableName = null;
                 return false;
             }
 
-            protected override bool TryParseStateMachineHoistedUserVariableName(string proxyName, out string variableName, out int index)
+            protected override bool TryParseStateMachineHoistedUserVariableName(string proxyName, out string? variableName, out int index)
             {
                 TryParseGeneratedName(proxyName, out var kind, out int openBracketOffset, out int closeBracketOffset);
                 if (kind == CommonGeneratedNameKind.HoistedLocalField)
@@ -616,7 +608,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 return false;
             }
 
-            protected override bool TryParseStateMachineTypeName(string stateMachineTypeName, out string methodName)
+            protected override bool TryParseStateMachineTypeName(string stateMachineTypeName, out string? methodName)
             {
                 TryParseGeneratedName(stateMachineTypeName, out var kind, out int openBracketOffset, out int closeBracketOffset);
                 switch (kind)
@@ -630,7 +622,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 }
             }
 
-            protected override bool TryParseStaticLocalFieldName(string fieldName, out string methodName, out string methodSignature, out string localName)
+            protected override bool TryParseStaticLocalFieldName(string fieldName, out string? methodName, out string? methodSignature, out string? localName)
             {
                 methodName = null;
                 methodSignature = null;
@@ -638,7 +630,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 return false;
             }
 
-            protected override bool TryGetUnmangledTypeParameterName(string typeParameterName, out string unmangedTypeParameterName)
+            protected override bool TryGetUnmangledTypeParameterName(string typeParameterName, out string? unmangedTypeParameterName)
             {
                 unmangedTypeParameterName = null;
                 return false;
@@ -646,7 +638,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
 
             protected override bool? IsDisplayClassInstance(string fieldType, string fieldName)
             {
-                TryParseGeneratedName(fieldName, out var fieldKind, out var part);
+                TryParseGeneratedName(fieldName, out var fieldKind, out _);
 
                 switch (fieldKind)
                 {
@@ -723,9 +715,12 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                             case '6': kind = CommonGeneratedNameKind.Deprecated_OuterscopeLocals; break;
                             case 'a': kind = CommonGeneratedNameKind.Deprecated_IteratorInstance; break;
                             case 'g': kind = CommonGeneratedNameKind.LocalFunction; break;// Also Deprecated_InitializerLocal
-                            case 'j': kind = CommonGeneratedNameKind.Deprecated_AnonymousTypeTypeParameter; break;
+                            case 'j': kind = CommonGeneratedNameKind.AnonymousTypeTypeParameter; break;
                             case 'q': kind = CommonGeneratedNameKind.Deprecated_DynamicDelegate; break;
                             case 'r': kind = CommonGeneratedNameKind.Deprecated_ComrefCallLocal; break;
+                            case 'v': kind = CommonGeneratedNameKind.AsyncIteratorPromiseOfValueOrEndBackingField; break;
+                            case 'w': kind = CommonGeneratedNameKind.DisposeModeField; break;
+                            case 'x': kind = CommonGeneratedNameKind.CombinedTokensField; break;
                             default: kind = CommonGeneratedNameKind.None; break;
                             }
                             return kind != CommonGeneratedNameKind.None;
@@ -851,13 +846,13 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 return false;
             }
 
-            protected override bool TryParseSourceMethodNameFromGeneratedName(string generatedName, CommonGeneratedNameKind requiredKind, out string methodName)
+            protected override bool TryParseSourceMethodNameFromGeneratedName(string generatedName, CommonGeneratedNameKind requiredKind, out string? methodName)
             {
                 methodName = null;
                 return false;
             }
 
-            protected override bool TryParseGeneratedName(string name, out CommonGeneratedNameKind kind, out string part)
+            protected override bool TryParseGeneratedName(string name, out CommonGeneratedNameKind kind, out string? part)
             {
                 kind = GetKind(name);
                 if (kind != CommonGeneratedNameKind.None)
@@ -882,7 +877,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 return false;
             }
 
-            protected override bool TryParseHoistedUserVariableName(string proxyName, out string variableName)
+            protected override bool TryParseHoistedUserVariableName(string proxyName, out string? variableName)
             {
                 variableName = null;
 
@@ -901,7 +896,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 return true;
             }
 
-            protected override bool TryParseStateMachineHoistedUserVariableName(string proxyName, out string variableName, out int index)
+            protected override bool TryParseStateMachineHoistedUserVariableName(string proxyName, out string? variableName, out int index)
             {
                 variableName = null;
                 index = 0;
@@ -922,7 +917,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 return int.TryParse(proxyName.Substring(separator + 1), NumberStyles.None, CultureInfo.InvariantCulture, out index);
             }
 
-            protected override bool TryParseStateMachineTypeName(string stateMachineTypeName, out string methodName)
+            protected override bool TryParseStateMachineTypeName(string stateMachineTypeName, out string? methodName)
             {
                 methodName = null;
 
@@ -942,7 +937,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 return true;
             }
 
-            protected override bool TryParseStaticLocalFieldName(string fieldName, out string methodName, out string methodSignature, out string localName)
+            protected override bool TryParseStaticLocalFieldName(string fieldName, out string? methodName, out string? methodSignature, out string? localName)
             {
                 if (fieldName.StartsWith(VisualBasic_StringConstants.StaticLocalFieldNamePrefix, StringComparison.Ordinal))
                 {
@@ -962,7 +957,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 return false;
             }
 
-            protected override bool TryGetUnmangledTypeParameterName(string typeParameterName, out string unmangedTypeParameterName)
+            protected override bool TryGetUnmangledTypeParameterName(string typeParameterName, out string? unmangedTypeParameterName)
             {
                 if (typeParameterName.StartsWith(VisualBasic_StringConstants.StateMachineTypeParameterPrefix, StringComparison.Ordinal))
                 {
@@ -976,9 +971,9 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
 
             protected override bool? IsDisplayClassInstance(string fieldType, string fieldName)
             {
-                return fieldName.StartsWith(VisualBasic_StringConstants.HoistedSpecialVariablePrefix + VisualBasic_StringConstants.ClosureVariablePrefix) ||
-                    fieldName.StartsWith(VisualBasic_StringConstants.StateMachineHoistedUserVariablePrefix + VisualBasic_StringConstants.ClosureVariablePrefix) ||
-                    fieldName.StartsWith(VisualBasic_StringConstants.HoistedSpecialVariablePrefix + VisualBasic_StringConstants.DisplayClassPrefix); // Async lambda case
+                return fieldName.StartsWith(VisualBasic_StringConstants.HoistedSpecialVariablePrefix + VisualBasic_StringConstants.ClosureVariablePrefix, StringComparison.Ordinal) ||
+                       fieldName.StartsWith(VisualBasic_StringConstants.StateMachineHoistedUserVariablePrefix + VisualBasic_StringConstants.ClosureVariablePrefix, StringComparison.Ordinal) ||
+                       fieldName.StartsWith(VisualBasic_StringConstants.HoistedSpecialVariablePrefix + VisualBasic_StringConstants.DisplayClassPrefix, StringComparison.Ordinal); // Async lambda case
             }
 
             sealed class VisualBasic_StringConstants

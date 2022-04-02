@@ -19,9 +19,9 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
         internal readonly string FullName;
         internal readonly string Type;
         internal readonly Guid CustomTypeInfoId;
-        internal readonly ReadOnlyCollection<byte> CustomTypeInfo;
+        internal readonly ReadOnlyCollection<byte>? CustomTypeInfo;
 
-        internal Alias(DkmClrAliasKind kind, string name, string fullName, string type, Guid customTypeInfoId, ReadOnlyCollection<byte> customTypeInfo)
+        internal Alias(DkmClrAliasKind kind, string name, string fullName, string type, Guid customTypeInfoId, ReadOnlyCollection<byte>? customTypeInfo)
         {
             RoslynDebug.Assert(!string.IsNullOrEmpty(fullName));
             RoslynDebug.Assert(!string.IsNullOrEmpty(type));

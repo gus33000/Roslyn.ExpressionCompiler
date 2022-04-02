@@ -316,7 +316,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             DkmEvaluationFlags compilationFlags,
             ImmutableArray<Alias> aliases,
             out ResultProperties resultProperties,
-            out string errorMessage)
+            out string? errorMessage)
         {
             var diagnostics = DiagnosticBag.GetInstance();
             var res = CompileExpression(expr, compilationFlags, aliases, diagnostics, out resultProperties, null);
@@ -408,12 +408,12 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             return expr.ParseExpression(diagnostics, allowFormatSpecifiers: true, out formatSpecifiers);
         }
 
-        internal CompileResult CompileAssignment(
+        internal CompileResult? CompileAssignment(
             string target,
             string expr,
             ImmutableArray<Alias> aliases,
             out ResultProperties resultProperties,
-            out string errorMessage)
+            out string? errorMessage)
         {
             var diagnostics = DiagnosticBag.GetInstance();
             var res = CompileAssignment(target, expr, aliases, diagnostics, out resultProperties, null);
@@ -479,7 +479,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             ImmutableArray<Alias> aliases,
             out DSEELocalAndMethod[] locals,
             out string typeName,
-            out string errorMessage)
+            out string? errorMessage)
         {
             var diagnostics = DiagnosticBag.GetInstance();
             var builder = ArrayBuilder<LocalAndMethod>.GetInstance();

@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis.Debugging;
 using Microsoft.VisualStudio.Debugger.Evaluation.ClrCompilation;
 using Microsoft.CodeAnalysis.PooledObjects;
 using Microsoft.CodeAnalysis.Symbols;
+using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.ExpressionEvaluator.DnSpy
 {
@@ -31,9 +32,9 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator.DnSpy
         /// <summary>
         /// null if none
         /// </summary>
-        public ReadOnlyCollection<byte> CustomTypeInfo;
+        public ReadOnlyCollection<byte>? CustomTypeInfo;
 
-        public DSEELocalAndMethod(string localName, string localDisplayName, string methodName, DkmClrCompilationResultFlags flags, LocalAndMethodKind kind, int index, Guid customTypeInfoId, ReadOnlyCollection<byte> customTypeInfo)
+        public DSEELocalAndMethod(string localName, string localDisplayName, string methodName, DkmClrCompilationResultFlags flags, LocalAndMethodKind kind, int index, Guid customTypeInfoId, ReadOnlyCollection<byte>? customTypeInfo)
         {
             LocalName = localName;
             LocalDisplayName = localDisplayName;
@@ -66,11 +67,11 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator.DnSpy
         // VB: must be 0 or 2 in this order: file-level, project-level
         public ImmutableArray<ImmutableArray<DSEEImportRecord>> ImportRecordGroups;
         public ImmutableArray<DSEEExternAliasRecord> ExternAliasRecords;
-        public ImmutableDictionary<int, ImmutableArray<bool>> DynamicLocalMap;
+        public ImmutableDictionary<int, ImmutableArray<bool>>? DynamicLocalMap;
         public ImmutableDictionary<int, ImmutableArray<string?>>? TupleLocalMap;
         public string DefaultNamespaceName;
         public ImmutableArray<string> LocalVariableNames;
-        public ImmutableArray<string> ParameterNames;
+        public ImmutableArray<string?> ParameterNames;
         public ImmutableArray<DSEELocalConstant> LocalConstants;
         public ILSpan ReuseSpan;
         public CompilerKind Compiler;
@@ -91,15 +92,15 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator.DnSpy
     internal struct DSEEImportRecord
     {
         public DSEEImportTargetKind TargetKind;
-        public string Alias;
-        public string TargetString;
-        public string TargetAssemblyAlias;
+        public string? Alias;
+        public string? TargetString;
+        public string? TargetAssemblyAlias;
 
         public DSEEImportRecord(
             DSEEImportTargetKind targetKind,
-            string alias = null,
-            string targetString = null,
-            string targetAssemblyAlias = null)
+            string? alias = null,
+            string? targetString = null,
+            string? targetAssemblyAlias = null)
         {
             TargetKind = targetKind;
             Alias = alias;
@@ -107,8 +108,8 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator.DnSpy
             TargetAssemblyAlias = targetAssemblyAlias;
         }
 
-        public static DSEEImportRecord CreateType(string serializedTypeName, string alias = null) => new DSEEImportRecord(DSEEImportTargetKind.Type, targetString: serializedTypeName, alias: alias);
-        public static DSEEImportRecord CreateNamespace(string @namespace, string alias = null, string targetAssemblyAlias = null) => new DSEEImportRecord(DSEEImportTargetKind.Namespace, targetString: @namespace, alias: alias, targetAssemblyAlias: targetAssemblyAlias);
+        public static DSEEImportRecord CreateType(string serializedTypeName, string? alias = null) => new DSEEImportRecord(DSEEImportTargetKind.Type, targetString: serializedTypeName, alias: alias);
+        public static DSEEImportRecord CreateNamespace(string @namespace, string? alias = null, string? targetAssemblyAlias = null) => new DSEEImportRecord(DSEEImportTargetKind.Namespace, targetString: @namespace, alias: alias, targetAssemblyAlias: targetAssemblyAlias);
         public static DSEEImportRecord CreateAssembly(string alias) => new DSEEImportRecord(DSEEImportTargetKind.Assembly, alias: alias);
     }
 
@@ -179,16 +180,16 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator.DnSpy
                         break;
 
                     case DSEEImportTargetKind.Type:
-                        Debug.Assert(r.TargetString != null);
-                        Debug.Assert(r.TargetAssemblyAlias == null);
+                        RoslynDebug.Assert(r.TargetString != null);
+                        RoslynDebug.Assert(r.TargetAssemblyAlias == null);
                         var targetType = symbolProvider.GetTypeSymbolForSerializedType(r.TargetString);
                         b.Add(new ImportRecord(ImportTargetKind.Type, alias: r.Alias, targetType: targetType));
                         break;
 
                     case DSEEImportTargetKind.NamespaceOrType:
-                        Debug.Assert(r.Alias != null);
-                        Debug.Assert(r.TargetString != null);
-                        Debug.Assert(r.TargetAssemblyAlias == null);
+                        RoslynDebug.Assert(r.Alias != null);
+                        RoslynDebug.Assert(r.TargetString != null);
+                        RoslynDebug.Assert(r.TargetAssemblyAlias == null);
                         b.Add(new ImportRecord(ImportTargetKind.NamespaceOrType, alias: r.Alias, targetString: r.TargetString));
                         break;
 
@@ -253,8 +254,8 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator.DnSpy
 
             foreach (var r in externAliasRecords)
             {
-                Debug.Assert(r.Alias != null);
-                Debug.Assert(r.TargetAssembly != null);
+                RoslynDebug.Assert(r.Alias != null);
+                RoslynDebug.Assert(r.TargetAssembly != null);
                 if (!AssemblyIdentity.TryParseDisplayName(r.TargetAssembly, out var targetIdentity))
                 {
                     Debug.Fail($"Couldn't parse assembly name: {r.TargetAssembly}");

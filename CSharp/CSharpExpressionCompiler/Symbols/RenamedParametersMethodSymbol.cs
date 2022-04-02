@@ -14,7 +14,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
     sealed class RenamedParametersMethodSymbol : MethodSymbol
     {
         private readonly MethodSymbol _originalMethod;
-        private readonly ParameterSymbol _thisParameter;
+        private readonly ParameterSymbol? _thisParameter;
         private readonly ImmutableArray<ParameterSymbol> _parameters;
 
         public RenamedParametersMethodSymbol(MethodSymbol originalMethod, MethodDebugInfo<TypeSymbol, LocalSymbol> methodDebugInfo)
@@ -27,7 +27,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             var hasThisParameter = (object)thisParameter != null;
             if (hasThisParameter)
             {
-                _thisParameter = MakeParameterSymbol(-1, GeneratedNames.ThisProxyFieldName(), thisParameter);
+                _thisParameter = MakeParameterSymbol(-1, GeneratedNames.ThisProxyFieldName(), thisParameter!);
                 Debug.Assert(TypeSymbol.Equals(_thisParameter.Type, originalMethod.ContainingType, TypeCompareKind.ConsiderEverything));
             }
 

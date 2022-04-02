@@ -1414,7 +1414,8 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
         {
             var fieldType = field.Type;
             var fieldName = field.Name;
-            TryParseGeneratedName(fieldName, out var fieldKind, out var part);
+            if (!TryParseGeneratedName(fieldName, out var fieldKind, out var part))
+                return false;
 
             switch (fieldKind)
             {
@@ -1578,7 +1579,7 @@ REPARSE:
             }
         }
 
-        private bool TryParseGeneratedName(string name, out GeneratedNameKind kind, out string part)
+        private bool TryParseGeneratedName(string name, out GeneratedNameKind kind, [NotNullWhen(true)] out string? part)
         {
             return _methodDebugInfo.Compiler.TryParseGeneratedName(name, out kind, out part);
         }
@@ -1596,7 +1597,7 @@ REPARSE:
             }
         }
 
-        internal static DisplayClassVariable GetThisProxy(ImmutableDictionary<string, DisplayClassVariable> displayClassVariables)
+        internal static DisplayClassVariable? GetThisProxy(ImmutableDictionary<string, DisplayClassVariable> displayClassVariables)
         {
             return displayClassVariables.Values.FirstOrDefault(v => v.Kind == DisplayClassVariableKind.This);
         }
@@ -1651,13 +1652,13 @@ REPARSE:
         {
             var candidateSubstitutedSourceType = candidateSubstitutedSourceMethod.ContainingType;
 
-            string desiredMethodName;
+            string? desiredMethodName;
             if (compiler.TryParseSourceMethodNameFromGeneratedName(candidateSubstitutedSourceType.Name, GeneratedNameKind.StateMachineType, out desiredMethodName) ||
                 compiler.TryParseSourceMethodNameFromGeneratedName(candidateSubstitutedSourceMethod.Name, GeneratedNameKind.LambdaMethod, out desiredMethodName) ||
                 compiler.TryParseSourceMethodNameFromGeneratedName(candidateSubstitutedSourceMethod.Name, GeneratedNameKind.LocalFunction, out desiredMethodName))
             {
                 // We could be in the MoveNext method of an async lambda.
-                string tempMethodName;
+                string? tempMethodName;
                 if (compiler.TryParseSourceMethodNameFromGeneratedName(desiredMethodName, GeneratedNameKind.LambdaMethod, out tempMethodName) ||
                     compiler.TryParseSourceMethodNameFromGeneratedName(desiredMethodName, GeneratedNameKind.LocalFunction, out tempMethodName))
                 {
@@ -1665,7 +1666,7 @@ REPARSE:
 
                     var containing = candidateSubstitutedSourceType.ContainingType;
                     Debug.Assert((object)containing != null);
-                    if (compiler.GetKind(containing.Name) == GeneratedNameKind.LambdaDisplayClass)
+                    if (compiler.GetKind(containing!.Name) == GeneratedNameKind.LambdaDisplayClass)
                     {
                         candidateSubstitutedSourceType = containing;
                         sourceMethodMustBeInstance = candidateSubstitutedSourceType.MemberNames.Select(m => compiler.GetKind(m)).Contains(GeneratedNameKind.ThisProxyField);

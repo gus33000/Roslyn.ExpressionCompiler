@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Symbols;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.ExpressionEvaluator;
 
 namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
@@ -20,19 +21,19 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             return CommonGeneratedNames.TryParseSlotIndex(compiler, fieldName, out slotIndex);
         }
 
-        public static bool TryParseSourceMethodNameFromGeneratedName(this CompilerKind compiler, string generatedName, GeneratedNameKind requiredKind, out string methodName)
+        public static bool TryParseSourceMethodNameFromGeneratedName(this CompilerKind compiler, string generatedName, GeneratedNameKind requiredKind, [NotNullWhen(true)] out string? methodName)
         {
             return CommonGeneratedNames.TryParseSourceMethodNameFromGeneratedName(compiler, generatedName, requiredKind.ToCommonGeneratedNameKind(), out methodName);
         }
 
-        public static bool TryParseGeneratedName(this CompilerKind compiler, string name, out GeneratedNameKind kind, out string part)
+        public static bool TryParseGeneratedName(this CompilerKind compiler, string name, out GeneratedNameKind kind, [NotNullWhen(true)] out string? part)
         {
             var res = CommonGeneratedNames.TryParseGeneratedName(compiler, name, out var commonKind, out part);
             kind = commonKind.ToGeneratedNameKind();
             return res;
         }
 
-        public static string GetUnmangledTypeParameterName(this CompilerKind compiler, string typeParameterName)
+        public static string? GetUnmangledTypeParameterName(this CompilerKind compiler, string typeParameterName)
         {
             return CommonGeneratedNames.GetUnmangledTypeParameterName(compiler, typeParameterName);
         }

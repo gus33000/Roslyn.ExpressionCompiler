@@ -88,9 +88,9 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 formatter.Format(error, preferredUICulture ?? CultureInfo.CurrentUICulture);
         }
 
-        protected static string GetErrorAndFree(DiagnosticBag diagnostics)
+        protected static string? GetErrorAndFree(DiagnosticBag diagnostics)
         {
-            string result;
+            string? result;
             if (diagnostics.HasAnyErrors())
             {
                 var error = diagnostics.AsEnumerable().First(a => a.Severity == DiagnosticSeverity.Error);

@@ -105,7 +105,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             else
             {
                 type = local.Type;
-                if (type is NamedTypeSymbol namedType && namedType.IsTupleType)
+                if (type is NamedTypeSymbol namedType && namedType.TupleUnderlyingType is not null)
                 {
                     type = namedType.TupleUnderlyingType;
                 }
