@@ -67,7 +67,12 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator
                 Dim assembly = DirectCast(pair.Value, AssemblySymbol)
                 For Each [module] In assembly.Modules
                     Dim m = DirectCast([module], PEModuleSymbol)
-                    Dim id = m.Module.GetModuleVersionIdOrThrow()
+                    Dim id As Guid
+                    Try
+                        id = m.Module.GetModuleVersionIdOrThrow()
+                    Catch
+                        id = Guid.Empty
+                    End Try
                     If id = moduleVersionId Then
                         Return m
                     End If

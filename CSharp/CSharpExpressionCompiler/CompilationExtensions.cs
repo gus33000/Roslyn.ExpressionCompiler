@@ -76,7 +76,15 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
                 foreach (var module in assembly.Modules)
                 {
                     var m = (PEModuleSymbol)module;
-                    var id = m.Module.GetModuleVersionIdOrThrow();
+                    Guid id;
+                    try
+                    {
+                        id = m.Module.GetModuleVersionIdOrThrow();
+                    }
+                    catch
+                    {
+                       id = Guid.Empty;
+                    }
                     if (id == moduleVersionId)
                     {
                         return m;

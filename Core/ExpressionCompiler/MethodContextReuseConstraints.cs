@@ -20,7 +20,6 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
 
         internal MethodContextReuseConstraints(Guid moduleVersionId, int methodToken, int methodVersion, ILSpan span)
         {
-            Debug.Assert(moduleVersionId != Guid.Empty);
             Debug.Assert(MetadataTokens.Handle(methodToken).Kind == HandleKind.MethodDefinition);
             Debug.Assert(methodVersion >= 1);
 
@@ -32,7 +31,6 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
 
         public bool AreSatisfied(Guid moduleVersionId, int methodToken, int methodVersion, int ilOffset)
         {
-            Debug.Assert(moduleVersionId != Guid.Empty);
             Debug.Assert(MetadataTokens.Handle(methodToken).Kind == HandleKind.MethodDefinition);
             Debug.Assert(methodVersion >= 1);
             Debug.Assert(ilOffset >= 0);
@@ -53,12 +51,12 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
         /// Examples:
         /// scopes: [   [   ) x [  )  )
         /// result:         [   )
-        /// 
+        ///
         /// scopes: [ x [   )   [  )  )
-        /// result: [   )     
-        /// 
+        /// result: [   )
+        ///
         /// scopes: [   [ x )   [  )  )
-        /// result:     [   )     
+        /// result:     [   )
         /// </summary>
         public static ILSpan CalculateReuseSpan(int ilOffset, ILSpan initialSpan, IEnumerable<ILSpan> scopes)
         {
