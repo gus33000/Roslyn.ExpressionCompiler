@@ -27,6 +27,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             default,
             ImmutableArray<TLocalSymbol>.Empty,
             ILSpan.MaxValue,
+            containingDocumentName: null,
             CompilerKind.Unknown);
 
         /// <summary>
@@ -46,6 +47,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
         public readonly ImmutableArray<string?> ParameterNames;
         public readonly ImmutableArray<TLocalSymbol> LocalConstants;
         public readonly ILSpan ReuseSpan;
+        public readonly string? ContainingDocumentName;
         public readonly CompilerKind Compiler;
 
         public MethodDebugInfo(
@@ -60,6 +62,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             ImmutableArray<string?> parameterNames,
             ImmutableArray<TLocalSymbol> localConstants,
             ILSpan reuseSpan,
+            string? containingDocumentName,
             CompilerKind compiler)
         {
             RoslynDebug.Assert(!importRecordGroups.IsDefault);
@@ -80,6 +83,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             ParameterNames = parameterNames;
             LocalConstants = localConstants;
             ReuseSpan = reuseSpan;
+            ContainingDocumentName = containingDocumentName;
             Compiler = compiler;
         }
 

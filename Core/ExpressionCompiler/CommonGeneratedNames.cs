@@ -38,7 +38,8 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
         //IteratorParameterProxyField,
         StateMachineAwaiterField,
         StateMachineStateField,
-        StateMachineHoistedUserVariableField,
+        StateMachineHoistedUserVariableOrDisplayClassField,
+        HoistedWithLocalPrefix,
         StaticLocalField,
         TransparentIdentifier,
         AnonymousTransparentIdentifier,
@@ -63,6 +64,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
         //LambdaDisplayClass,
         StateMachineType,
         FixedBufferField,
+        FileType,
         //AnonymousType,
         LocalFunction,
         Deprecated_InitializerLocal,
@@ -79,6 +81,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
         Deprecated_ComrefCallLocal,
         //HoistedSynthesizedLocalField,
         AsyncBuilderField,
+        DelegateCacheContainerType,
         //AwaiterField,
         AsyncIteratorPromiseOfValueOrEndBackingField,
         DisposeModeField,
@@ -130,7 +133,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
         protected abstract bool TryParseSourceMethodNameFromGeneratedName(string generatedName, CommonGeneratedNameKind requiredKind, out string? methodName);
         protected abstract bool TryParseGeneratedName(string name, out CommonGeneratedNameKind kind, out string? part);
         protected abstract bool TryParseHoistedUserVariableName(string proxyName, out string? variableName);
-        protected abstract bool TryParseStateMachineHoistedUserVariableName(string proxyName, out string? variableName, out int index);
+        protected abstract bool TryParseStateMachineHoistedUserVariableOrDisplayClassName(string proxyName, out string? variableName, out int index);
         protected abstract bool TryParseStateMachineTypeName(string stateMachineTypeName, out string? methodName);
         protected abstract bool TryParseStaticLocalFieldName(string fieldName, out string? methodName, out string? methodSignature, out string? localName);
         protected abstract bool TryGetUnmangledTypeParameterName(string typeParameterName, out string? unmangedTypeParameterName);
@@ -208,7 +211,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
         {
             foreach (var g in GetGeneratedNames(compiler))
             {
-                if (g.TryParseStateMachineHoistedUserVariableName(proxyName, out variableName, out index))
+                if (g.TryParseStateMachineHoistedUserVariableOrDisplayClassName(proxyName, out variableName, out index))
                     return true;
             }
             variableName = null;
@@ -445,7 +448,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 return false;
             }
 
-            protected override bool TryParseStateMachineHoistedUserVariableName(string proxyName, out string? variableName, out int index)
+            protected override bool TryParseStateMachineHoistedUserVariableOrDisplayClassName(string proxyName, out string? variableName, out int index)
             {
                 TryParseGeneratedName(proxyName, out var kind, out int openBracketOffset, out int closeBracketOffset);
                 if (kind == CommonGeneratedNameKind.HoistedLocalField)
@@ -595,7 +598,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 return false;
             }
 
-            protected override bool TryParseStateMachineHoistedUserVariableName(string proxyName, out string? variableName, out int index)
+            protected override bool TryParseStateMachineHoistedUserVariableOrDisplayClassName(string proxyName, out string? variableName, out int index)
             {
                 TryParseGeneratedName(proxyName, out var kind, out int openBracketOffset, out int closeBracketOffset);
                 if (kind == CommonGeneratedNameKind.HoistedLocalField)
@@ -686,7 +689,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                     if (closeBracketOffset >= 0 && closeBracketOffset >= 0 && closeBracketOffset + 1 < name.Length)
                     {
                         int c = name[closeBracketOffset + 1];
-                        if ((c >= '1' && c <= '9') || (c >= 'a' && c <= 'z')) // Note '0' is not special.
+                        if ((c >= '1' && c <= '9') || (c >= 'a' && c <= 'z') || c == 'F' || c == 'O') // Note '0' is not special.
                         {
                             switch (c)
                             {
@@ -704,6 +707,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                             case '7': kind = CommonGeneratedNameKind.ReusableHoistedLocalField; break;
                             case '9': kind = CommonGeneratedNameKind.LambdaCacheField; break;
                             case 'e': kind = CommonGeneratedNameKind.FixedBufferField; break;
+                            case 'F': kind = CommonGeneratedNameKind.FileType; break;
                             case 'f': kind = CommonGeneratedNameKind.AnonymousType; break;
                             case 'h': kind = CommonGeneratedNameKind.TransparentIdentifier; break;
                             case 'i': kind = CommonGeneratedNameKind.AnonymousTypeField; break;
@@ -712,6 +716,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                             case 'm': kind = CommonGeneratedNameKind.IteratorFinallyMethod; break;
                             case 'n': kind = CommonGeneratedNameKind.BaseMethodWrapper; break;
                             case 't': kind = CommonGeneratedNameKind.AsyncBuilderField; break;
+                            case 'O': kind = CommonGeneratedNameKind.DelegateCacheContainerType; break;
                             case 'o': kind = CommonGeneratedNameKind.DynamicCallSiteContainerType; break;
                             case 'p': kind = CommonGeneratedNameKind.DynamicCallSiteField; break;
                             case '6': kind = CommonGeneratedNameKind.Deprecated_OuterscopeLocals; break;
@@ -786,9 +791,13 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 {
                     return CommonGeneratedNameKind.StateMachineAwaiterField;
                 }
-                else if (name.StartsWith(VisualBasic_StringConstants.StateMachineHoistedUserVariablePrefix, StringComparison.Ordinal))
+                else if (name.StartsWith(VisualBasic_StringConstants.HoistedWithLocalPrefix, StringComparison.Ordinal))
                 {
-                    return CommonGeneratedNameKind.StateMachineHoistedUserVariableField;
+                    return CommonGeneratedNameKind.HoistedWithLocalPrefix;
+                }
+                else if (name.StartsWith(VisualBasic_StringConstants.StateMachineHoistedUserVariableOrDisplayClassPrefix, StringComparison.Ordinal))
+                {
+                    return CommonGeneratedNameKind.StateMachineHoistedUserVariableOrDisplayClassField;
                 }
                 else if (name.StartsWith(AnonymousTypeTemplateNamePrefix, StringComparison.Ordinal))
                 {
@@ -842,7 +851,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
 
             protected override bool TryParseSlotIndex(string fieldName, out int slotIndex)
             {
-                if (TryParseStateMachineHoistedUserVariableName(fieldName, out _, out slotIndex))
+                if (TryParseStateMachineHoistedUserVariableOrDisplayClassName(fieldName, out _, out slotIndex))
                     return true;
                 slotIndex = -1;
                 return false;
@@ -859,7 +868,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 kind = GetKind(name);
                 if (kind != CommonGeneratedNameKind.None)
                 {
-                    if (TryParseStateMachineHoistedUserVariableName(name, out part, out _))
+                    if (TryParseStateMachineHoistedUserVariableOrDisplayClassName(name, out part, out _))
                         return true;
                     switch (kind)
                     {
@@ -898,17 +907,17 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 return true;
             }
 
-            protected override bool TryParseStateMachineHoistedUserVariableName(string proxyName, out string? variableName, out int index)
+            protected override bool TryParseStateMachineHoistedUserVariableOrDisplayClassName(string proxyName, out string? variableName, out int index)
             {
                 variableName = null;
                 index = 0;
 
-                if (!proxyName.StartsWith(VisualBasic_StringConstants.StateMachineHoistedUserVariablePrefix, StringComparison.Ordinal))
+                if (!proxyName.StartsWith(VisualBasic_StringConstants.StateMachineHoistedUserVariableOrDisplayClassPrefix, StringComparison.Ordinal))
                 {
                     return false;
                 }
 
-                int prefixLen = VisualBasic_StringConstants.StateMachineHoistedUserVariablePrefix.Length;
+                int prefixLen = VisualBasic_StringConstants.StateMachineHoistedUserVariableOrDisplayClassPrefix.Length;
                 int separator = proxyName.LastIndexOf('$');
                 if (separator <= prefixLen)
                 {
@@ -974,7 +983,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             protected override bool? IsDisplayClassInstance(string fieldType, string fieldName)
             {
                 return fieldName.StartsWith(VisualBasic_StringConstants.HoistedSpecialVariablePrefix + VisualBasic_StringConstants.ClosureVariablePrefix, StringComparison.Ordinal) ||
-                       fieldName.StartsWith(VisualBasic_StringConstants.StateMachineHoistedUserVariablePrefix + VisualBasic_StringConstants.ClosureVariablePrefix, StringComparison.Ordinal) ||
+                       fieldName.StartsWith(VisualBasic_StringConstants.StateMachineHoistedUserVariableOrDisplayClassPrefix + VisualBasic_StringConstants.ClosureVariablePrefix, StringComparison.Ordinal) ||
                        fieldName.StartsWith(VisualBasic_StringConstants.HoistedSpecialVariablePrefix + VisualBasic_StringConstants.DisplayClassPrefix, StringComparison.Ordinal); // Async lambda case
             }
 
@@ -1019,7 +1028,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 internal const string HoistedUserVariablePrefix = "$VB$Local_";
                 internal const string HoistedSpecialVariablePrefix = "$VB$NonLocal_";
                 internal const string HoistedWithLocalPrefix = "$W";
-                internal const string StateMachineHoistedUserVariablePrefix = "$VB$ResumableLocal_";
+                internal const string StateMachineHoistedUserVariableOrDisplayClassPrefix = "$VB$ResumableLocal_";
                 internal const string ClosureVariablePrefix = "$VB$Closure_";
                 internal const string DisplayClassPrefix = "_Closure$__";
                 internal const string StateMachineTypeNamePrefix = "VB$StateMachine_";

@@ -20,7 +20,8 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             case CommonGeneratedNameKind.IteratorInitialThreadIdField: return GeneratedNameKind.IteratorCurrentThreadIdField;
             case CommonGeneratedNameKind.StateMachineAwaiterField: return GeneratedNameKind.AwaiterField;
             case CommonGeneratedNameKind.StateMachineStateField: return GeneratedNameKind.StateMachineStateField;
-            case CommonGeneratedNameKind.StateMachineHoistedUserVariableField: return GeneratedNameKind.HoistedLocalField;
+            case CommonGeneratedNameKind.StateMachineHoistedUserVariableOrDisplayClassField: return GeneratedNameKind.HoistedLocalField;
+            case CommonGeneratedNameKind.HoistedWithLocalPrefix: return hiddenKind;
             case CommonGeneratedNameKind.StaticLocalField: return hiddenKind;
             case CommonGeneratedNameKind.TransparentIdentifier: return GeneratedNameKind.TransparentIdentifier;
             case CommonGeneratedNameKind.AnonymousTransparentIdentifier: return GeneratedNameKind.TransparentIdentifier;
@@ -39,6 +40,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             case CommonGeneratedNameKind.LambdaMethod: return GeneratedNameKind.LambdaMethod;
             case CommonGeneratedNameKind.StateMachineType: return GeneratedNameKind.StateMachineType;
             case CommonGeneratedNameKind.FixedBufferField: return GeneratedNameKind.FixedBufferField;
+            case CommonGeneratedNameKind.FileType: return GeneratedNameKind.FileType;
             case CommonGeneratedNameKind.LocalFunction: return GeneratedNameKind.LocalFunction;
             case CommonGeneratedNameKind.Deprecated_InitializerLocal: return GeneratedNameKind.Deprecated_InitializerLocal;
             case CommonGeneratedNameKind.AnonymousTypeField: return GeneratedNameKind.AnonymousTypeField;
@@ -52,6 +54,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             case CommonGeneratedNameKind.Deprecated_DynamicDelegate: return GeneratedNameKind.Deprecated_DynamicDelegate;
             case CommonGeneratedNameKind.Deprecated_ComrefCallLocal: return GeneratedNameKind.Deprecated_ComrefCallLocal;
             case CommonGeneratedNameKind.AsyncBuilderField: return GeneratedNameKind.AsyncBuilderField;
+            case CommonGeneratedNameKind.DelegateCacheContainerType: return GeneratedNameKind.DelegateCacheContainerType;
             case CommonGeneratedNameKind.StateMachineDisposingField: return hiddenKind;
             case CommonGeneratedNameKind.AsyncIteratorPromiseOfValueOrEndBackingField: return GeneratedNameKind.AsyncIteratorPromiseOfValueOrEndBackingField;
             case CommonGeneratedNameKind.DisposeModeField: return GeneratedNameKind.DisposeModeField;
@@ -80,6 +83,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             case GeneratedNameKind.LambdaDisplayClass: return CommonGeneratedNameKind.LambdaDisplayClass;
             case GeneratedNameKind.StateMachineType: return CommonGeneratedNameKind.StateMachineType;
             case GeneratedNameKind.FixedBufferField: return CommonGeneratedNameKind.FixedBufferField;
+            case GeneratedNameKind.FileType: return CommonGeneratedNameKind.FileType;
             case GeneratedNameKind.AnonymousType: return CommonGeneratedNameKind.AnonymousType;
             case GeneratedNameKind.LocalFunction: return CommonGeneratedNameKind.LocalFunction;
             case GeneratedNameKind.TransparentIdentifier: return CommonGeneratedNameKind.TransparentIdentifier;
@@ -95,6 +99,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             case GeneratedNameKind.Deprecated_ComrefCallLocal: return CommonGeneratedNameKind.Deprecated_ComrefCallLocal;
             case GeneratedNameKind.HoistedSynthesizedLocalField: return CommonGeneratedNameKind.HoistedSynthesizedLocalField;
             case GeneratedNameKind.AsyncBuilderField: return CommonGeneratedNameKind.AsyncBuilderField;
+            case GeneratedNameKind.DelegateCacheContainerType: return CommonGeneratedNameKind.DelegateCacheContainerType;
             case GeneratedNameKind.AwaiterField: return CommonGeneratedNameKind.StateMachineAwaiterField;
             case GeneratedNameKind.AsyncIteratorPromiseOfValueOrEndBackingField: return CommonGeneratedNameKind.AsyncIteratorPromiseOfValueOrEndBackingField;
             case GeneratedNameKind.DisposeModeField: return CommonGeneratedNameKind.DisposeModeField;

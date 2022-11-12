@@ -162,6 +162,8 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
                 get { return false; }
             }
 
+            internal override bool IsRequired => throw ExceptionUtilities.Unreachable;
+
             public override FlowAnalysisAnnotations FlowAnalysisAnnotations
             {
                 get { return FlowAnalysisAnnotations.None; }
@@ -216,6 +218,10 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             {
                 return _type;
             }
+
+            public override RefKind RefKind => RefKind.None;
+
+            public override ImmutableArray<CustomModifier> RefCustomModifiers => ImmutableArray<CustomModifier>.Empty;
         }
     }
 }

@@ -74,6 +74,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator.DnSpy
         public ImmutableArray<string?> ParameterNames;
         public ImmutableArray<DSEELocalConstant> LocalConstants;
         public ILSpan ReuseSpan;
+        public string? ContainingDocumentName;
         public CompilerKind Compiler;
     }
 
@@ -150,6 +151,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator.DnSpy
                 info.ParameterNames,
                 Convert(info.LocalConstants, symbolProvider),
                 info.ReuseSpan,
+                info.ContainingDocumentName,
                 info.Compiler);
         }
 

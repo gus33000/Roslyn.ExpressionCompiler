@@ -224,7 +224,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator
             End If
 
             Dim localNames = debugInfo.LocalVariableNames.WhereAsArray(
-                Function(name) name Is Nothing OrElse debugInfo.Compiler.GetKind(name) <> GeneratedNameKind.StateMachineHoistedUserVariableField)
+                Function(name) name Is Nothing OrElse debugInfo.Compiler.GetKind(name) <> GeneratedNameKind.StateMachineHoistedUserVariableOrDisplayClassField)
 
             Dim localsBuilder = ArrayBuilder(Of LocalSymbol).GetInstance()
             MethodDebugInfo(Of TypeSymbol, LocalSymbol).GetLocals(localsBuilder, symbolProvider, localNames, localInfo, Nothing, debugInfo.TupleLocalMap)
@@ -247,6 +247,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator
             For Each localName In allLocalNames
                 Dim hoistedLocalName As String = Nothing
                 Dim hoistedLocalSlot As Integer = 0
+                'TryParseStateMachineHoistedUserVariableOrDisplayClassName
                 If localName IsNot Nothing AndAlso compiler.TryParseStateMachineHoistedUserVariableName(localName, hoistedLocalName, hoistedLocalSlot) Then
                     builder.Add(hoistedLocalSlot)
                 End If
@@ -281,8 +282,8 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator
         ''' When using DTEE with the hosting process enabled, if the assembly being debugged doesn't have
         ''' a Main method, the debugger will actually stop in a driver method in the hosting process.
         ''' (This condition is detected by <see cref="IsDteeEntryPoint"/>.)
-        ''' 
-        ''' Since such driver methods have no knowledge of the assembly being debugged, we synthesize 
+        '''
+        ''' Since such driver methods have no knowledge of the assembly being debugged, we synthesize
         ''' imports to bring symbols from the target assembly into scope (for convenience).  In particular,
         ''' we import the root namespace of any assembly that isn't obviously a framework assembly and
         ''' any namespace containing a module type.
@@ -369,7 +370,8 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator
                 tupleLocalMap:=Nothing,
                 localVariableNames:=ImmutableArray(Of String).Empty,
                 localConstants:=ImmutableArray(Of LocalSymbol).Empty,
-                reuseSpan:=Nothing)
+                reuseSpan:=Nothing,
+                containingDocumentName:=Nothing)
         End Function
 #End If
 
@@ -726,13 +728,6 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator
         Private Shared Function IsValidMissingAssemblyIdentity(identity As AssemblyIdentity) As Boolean
             Return identity IsNot Nothing AndAlso Not identity.Equals(MissingCorLibrarySymbol.Instance.Identity)
         End Function
-
-        Private Shared Function GetSynthesizedMethod(moduleBuilder As CommonPEModuleBuilder) As MethodSymbol
-            Dim method = DirectCast(moduleBuilder, EEAssemblyBuilder).Methods.Single(Function(m) m.MetadataName = s_methodName)
-            Debug.Assert(method.ContainingType.MetadataName = s_typeName)
-            Return method
-        End Function
-
     End Class
 
 End Namespace

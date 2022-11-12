@@ -71,7 +71,8 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             NamespaceBinder = CreateBinderChain(
                 Compilation,
                 currentFrame.ContainingNamespace,
-                methodDebugInfo.ImportRecordGroups);
+                methodDebugInfo.ImportRecordGroups,
+                methodDebugInfo.ContainingDocumentName is { } documentName ? FileIdentifier.Create(documentName) : null);
 
             if (_methodNotType)
             {
@@ -359,7 +360,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
                                         declaredLocals = ImmutableArray<LocalSymbol>.Empty;
                                         var expression = new BoundLocal(syntax, local, constantValueOpt: null, type: local.Type);
                                         properties = default;
-                                        return new BoundReturnStatement(syntax, RefKind.None, expression) { WasCompilerGenerated = true };
+                                        return new BoundReturnStatement(syntax, RefKind.None, expression, @checked: false) { WasCompilerGenerated = true };
                                     });
                                 var flags = local.IsWritableVariable ? DkmClrCompilationResultFlags.None : DkmClrCompilationResultFlags.ReadOnlyResult;
                                 localBuilder.Add(MakeLocalAndMethod(local, aliasMethod, flags));
@@ -565,7 +566,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
                 var local = method.LocalsForBinding[localIndex];
                 var expression = new BoundLocal(syntax, local, constantValueOpt: local.GetConstantValue(null, null, new BindingDiagnosticBag(diagnostics)), type: local.Type);
                 properties = default;
-                return new BoundReturnStatement(syntax, RefKind.None, expression) { WasCompilerGenerated = true };
+                return new BoundReturnStatement(syntax, RefKind.None, expression, @checked: false) { WasCompilerGenerated = true };
             });
         }
 
@@ -578,7 +579,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
                 var parameter = method.Parameters[parameterIndex];
                 var expression = new BoundParameter(syntax, parameter);
                 properties = default;
-                return new BoundReturnStatement(syntax, RefKind.None, expression) { WasCompilerGenerated = true };
+                return new BoundReturnStatement(syntax, RefKind.None, expression, @checked: false) { WasCompilerGenerated = true };
             });
         }
 
@@ -589,8 +590,8 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             {
                 declaredLocals = ImmutableArray<LocalSymbol>.Empty;
                 var expression = new BoundThisReference(syntax, GetNonDisplayClassContainer(container.SubstitutedSourceType, _methodDebugInfo.Compiler));
-                properties = default(ResultProperties);
-                return new BoundReturnStatement(syntax, RefKind.None, expression) { WasCompilerGenerated = true };
+                properties = default;
+                return new BoundReturnStatement(syntax, RefKind.None, expression, @checked: false) { WasCompilerGenerated = true };
             });
         }
 
@@ -602,7 +603,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
                 declaredLocals = ImmutableArray<LocalSymbol>.Empty;
                 var type = method.TypeMap.SubstituteNamedType(typeVariablesType);
                 var expression = new BoundObjectCreationExpression(syntax, type.InstanceConstructors[0]);
-                var statement = new BoundReturnStatement(syntax, RefKind.None, expression) { WasCompilerGenerated = true };
+                var statement = new BoundReturnStatement(syntax, RefKind.None, expression, @checked: false) { WasCompilerGenerated = true };
                 properties = default;
                 return statement;
             });
@@ -673,7 +674,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             }
 
             resultProperties = expression.ExpressionSymbol.GetResultProperties(flags, expression.ConstantValue != null);
-            return new BoundReturnStatement(syntax, RefKind.None, expression) { WasCompilerGenerated = true };
+            return new BoundReturnStatement(syntax, RefKind.None, expression, @checked: false) { WasCompilerGenerated = true };
         }
 
         private static bool IsDeconstruction(ExpressionSyntax syntax)
@@ -713,7 +714,8 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
         private static Binder CreateBinderChain(
             CSharpCompilation compilation,
             NamespaceSymbol @namespace,
-            ImmutableArray<ImmutableArray<ImportRecord>> importRecordGroups)
+            ImmutableArray<ImmutableArray<ImportRecord>> importRecordGroups,
+            FileIdentifier? fileIdentifier)
         {
             var stack = ArrayBuilder<string>.GetInstance();
             while (@namespace is object)
@@ -722,7 +724,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
                 @namespace = @namespace.ContainingNamespace;
             }
 
-            Binder binder = new BuckStopsHereBinder(compilation);
+            Binder binder = new BuckStopsHereBinder(compilation, fileIdentifier);
             var hasImports = !importRecordGroups.IsDefaultOrEmpty;
             var numImportStringGroups = hasImports ? importRecordGroups.Length : 0;
             var currentStringGroup = numImportStringGroups - 1;
@@ -1650,6 +1652,8 @@ REPARSE:
             CompilerKind compiler,
             bool sourceMethodMustBeInstance)
         {
+            Debug.Assert(candidateSubstitutedSourceMethod.DeclaringCompilation is not null);
+
             var candidateSubstitutedSourceType = candidateSubstitutedSourceMethod.ContainingType;
 
             string? desiredMethodName;
@@ -1682,9 +1686,12 @@ REPARSE:
                 {
                     if (IsViableSourceMethod(candidateMethod, desiredMethodName, desiredTypeParameters, sourceMethodMustBeInstance))
                     {
+                        MethodSymbol sourceMethod = new EECompilationContextMethod(candidateSubstitutedSourceMethod.DeclaringCompilation!, candidateMethod.OriginalDefinition);
+                        sourceMethod = sourceMethod.AsMember(substitutedSourceType);
+
                         return desiredTypeParameters.Length == 0
-                            ? candidateMethod
-                            : candidateMethod.Construct(candidateSubstitutedSourceType.TypeArgumentsWithAnnotationsNoUseSiteDiagnostics);
+                            ? sourceMethod
+                            : sourceMethod.Construct(candidateSubstitutedSourceType.TypeArgumentsWithAnnotationsNoUseSiteDiagnostics);
                     }
                 }
 

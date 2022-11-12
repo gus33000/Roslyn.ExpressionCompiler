@@ -22,8 +22,10 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator
                     Return GeneratedNameKind.StateMachineAwaiterField
                 Case CommonGeneratedNameKind.StateMachineStateField
                     Return GeneratedNameKind.StateMachineStateField
-                Case CommonGeneratedNameKind.StateMachineHoistedUserVariableField
-                    Return GeneratedNameKind.StateMachineHoistedUserVariableField
+                Case CommonGeneratedNameKind.StateMachineHoistedUserVariableOrDisplayClassField
+                    Return GeneratedNameKind.StateMachineHoistedUserVariableOrDisplayClassField
+                Case CommonGeneratedNameKind.HoistedWithLocalPrefix
+                    Return GeneratedNameKind.HoistedWithLocalPrefix
                 Case CommonGeneratedNameKind.StaticLocalField
                     Return GeneratedNameKind.StaticLocalField
                 Case CommonGeneratedNameKind.TransparentIdentifier
@@ -60,6 +62,8 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator
                     Return hiddenKind
                 Case CommonGeneratedNameKind.FixedBufferField
                     Return hiddenKind
+                Case CommonGeneratedNameKind.FileType
+                    Return hiddenKind
                 Case CommonGeneratedNameKind.LocalFunction
                     Return hiddenKind
                 Case CommonGeneratedNameKind.Deprecated_InitializerLocal
@@ -85,6 +89,8 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator
                 Case CommonGeneratedNameKind.Deprecated_ComrefCallLocal
                     Return hiddenKind
                 Case CommonGeneratedNameKind.AsyncBuilderField
+                    Return hiddenKind
+                Case CommonGeneratedNameKind.DelegateCacheContainerType
                     Return hiddenKind
                 Case CommonGeneratedNameKind.StateMachineDisposingField
                     Return hiddenKind
