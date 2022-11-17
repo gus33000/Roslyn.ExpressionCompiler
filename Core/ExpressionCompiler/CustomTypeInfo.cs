@@ -75,7 +75,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
         }
         */
 
-        internal static string? GetTupleElementNameIfAny(ReadOnlyCollection<string> tupleElementNames, int index)
+        internal static string? GetTupleElementNameIfAny(ReadOnlyCollection<string?>? tupleElementNames, int index)
         {
             return tupleElementNames != null && index < tupleElementNames.Count ?
                 tupleElementNames[index] :

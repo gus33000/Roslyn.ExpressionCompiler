@@ -28,8 +28,8 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator
         End Function
 
         <Extension>
-        Friend Function TryParseStateMachineHoistedUserVariableName(compiler As CompilerKind, proxyName As String, <Out> ByRef variableName As String, <Out()> ByRef index As Integer) As Boolean
-            Return CommonGeneratedNames.TryParseStateMachineHoistedUserVariableName(compiler, proxyName, variableName, index)
+        Friend Function TryParseStateMachineHoistedUserVariableOrDisplayClassName(compiler As CompilerKind, proxyName As String, <Out> ByRef variableName As String, <Out()> ByRef index As Integer) As Boolean
+            Return CommonGeneratedNames.TryParseStateMachineHoistedUserVariableOrDisplayClassName(compiler, proxyName, variableName, index)
         End Function
 
         <Extension>

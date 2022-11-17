@@ -207,7 +207,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             return false;
         }
 
-        public static bool TryParseStateMachineHoistedUserVariableName(CompilerKind compiler, string proxyName, out string? variableName, out int index)
+        public static bool TryParseStateMachineHoistedUserVariableOrDisplayClassName(CompilerKind compiler, string proxyName, out string? variableName, out int index)
         {
             foreach (var g in GetGeneratedNames(compiler))
             {

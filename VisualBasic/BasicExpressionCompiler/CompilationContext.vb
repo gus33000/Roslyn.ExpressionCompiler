@@ -1261,9 +1261,8 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator
                     Debug.Assert(Not field.IsShared)
                     variableKind = DisplayClassVariableKind.Local
                     variableName = part
-                ElseIf _methodDebugInfo.Compiler.TryParseStateMachineHoistedUserVariableName(fieldName, hoistedLocalName, hoistedLocalSlotIndex) Then
+                ElseIf _methodDebugInfo.Compiler.TryParseStateMachineHoistedUserVariableOrDisplayClassName(fieldName, hoistedLocalName, hoistedLocalSlotIndex) Then
                     Debug.Assert(Not field.IsShared)
-                    ' TODO: TryParseStateMachineHoistedUserVariableOrDisplayClassName
 
                     If Not inScopeHoistedLocalSlots.Contains(hoistedLocalSlotIndex) Then
                         Continue For

@@ -247,8 +247,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator
             For Each localName In allLocalNames
                 Dim hoistedLocalName As String = Nothing
                 Dim hoistedLocalSlot As Integer = 0
-                'TryParseStateMachineHoistedUserVariableOrDisplayClassName
-                If localName IsNot Nothing AndAlso compiler.TryParseStateMachineHoistedUserVariableName(localName, hoistedLocalName, hoistedLocalSlot) Then
+                If localName IsNot Nothing AndAlso compiler.TryParseStateMachineHoistedUserVariableOrDisplayClassName(localName, hoistedLocalName, hoistedLocalSlot) Then
                     builder.Add(hoistedLocalSlot)
                 End If
             Next
