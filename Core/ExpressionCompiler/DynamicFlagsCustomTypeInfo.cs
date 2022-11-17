@@ -49,6 +49,44 @@ ALL_FLAGS_READ:
             return seenTrue ? new ReadOnlyCollection<byte>(bytes) : null;
         }
 
+        internal static ReadOnlyCollection<byte>? ToBytes(bool[] dynamicFlags, int startIndex = 0)
+        {
+            RoslynDebug.AssertNotNull(dynamicFlags);
+            Debug.Assert(startIndex >= 0);
+
+            int numFlags = dynamicFlags.Length - startIndex;
+            if (numFlags == 0)
+            {
+                return null;
+            }
+
+            int numBytes = (numFlags + 7) / 8;
+            byte[] bytes = new byte[numBytes];
+            bool seenTrue = false;
+            for (int b = 0; b < numBytes; b++)
+            {
+                for (int i = 0; i < 8; i++)
+                {
+                    var f = b * 8 + i;
+                    if (f >= numFlags)
+                    {
+                        Debug.Assert(f == numFlags);
+                        goto ALL_FLAGS_READ;
+                    }
+
+                    if (dynamicFlags[startIndex + f])
+                    {
+                        seenTrue = true;
+                        bytes[b] |= (byte)(1 << i);
+                    }
+                }
+            }
+
+            ALL_FLAGS_READ:
+
+            return seenTrue ? new ReadOnlyCollection<byte>(bytes) : null;
+        }
+
         internal static bool GetFlag(ReadOnlyCollection<byte>? bytes, int index)
         {
             Debug.Assert(index >= 0);
