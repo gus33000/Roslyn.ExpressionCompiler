@@ -64,7 +64,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 reuseSpan = ILSpan.MaxValue;
             }
 
-            ReadMethodCustomDebugInformation(reader, methodHandle, out var hoistedLocalScopes, out var defaultNamespace);
+            ReadMethodCustomDebugInformation(reader, methodHandle, out var hoistedLocalScopes, out var defaultNamespace, out bool isPrimaryConstructor);
 
             var documentHandle = reader.GetMethodDebugInformation(methodHandle).Document;
             string? documentName = null;
@@ -87,6 +87,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 localConstants,
                 reuseSpan,
                 documentName,
+                isPrimaryConstructor: isPrimaryConstructor,
                 compiler);
         }
 
@@ -391,7 +392,8 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             MetadataReader reader,
             MethodDefinitionHandle methodHandle,
             out ImmutableArray<HoistedLocalScopeRecord> hoistedLocalScopes,
-            out string defaultNamespace)
+            out string defaultNamespace,
+            out bool isPrimaryConstructor)
         {
             hoistedLocalScopes = TryGetCustomDebugInformation(reader, methodHandle, PortableCustomDebugInfoKinds.StateMachineHoistedLocalScopes, out var info)
                 ? DecodeHoistedLocalScopes(reader.GetBlobReader(info.Value))
@@ -401,6 +403,8 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             defaultNamespace = TryGetCustomDebugInformation(reader, EntityHandle.ModuleDefinition, PortableCustomDebugInfoKinds.DefaultNamespace, out info)
                 ? DecodeDefaultNamespace(reader.GetBlobReader(info.Value))
                 : "";
+
+            isPrimaryConstructor = TryGetCustomDebugInformation(reader, methodHandle, PortableCustomDebugInfoKinds.PrimaryConstructorInformationBlob, out _);
         }
 
         /// <exception cref="BadImageFormatException">Invalid data format.</exception>

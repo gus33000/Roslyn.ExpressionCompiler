@@ -70,12 +70,14 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
         Deprecated_InitializerLocal,
         //TransparentIdentifier,
         AnonymousTypeField,
+        StateMachineStateIdField,
         AnonymousTypeTypeParameter,
         AutoPropertyBackingField,
         IteratorCurrentThreadIdField,
         IteratorFinallyMethod,
         BaseMethodWrapper,
         DynamicCallSiteContainerType,
+        PrimaryConstructorParameter,
         DynamicCallSiteField,
         Deprecated_DynamicDelegate,
         Deprecated_ComrefCallLocal,
@@ -711,6 +713,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                             case 'f': kind = CommonGeneratedNameKind.AnonymousType; break;
                             case 'h': kind = CommonGeneratedNameKind.TransparentIdentifier; break;
                             case 'i': kind = CommonGeneratedNameKind.AnonymousTypeField; break;
+                            case 'I': kind = CommonGeneratedNameKind.StateMachineStateIdField; break;
                             case 'k': kind = CommonGeneratedNameKind.AutoPropertyBackingField; break;
                             case 'l': kind = CommonGeneratedNameKind.IteratorCurrentThreadIdField; break;
                             case 'm': kind = CommonGeneratedNameKind.IteratorFinallyMethod; break;
@@ -718,6 +721,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                             case 't': kind = CommonGeneratedNameKind.AsyncBuilderField; break;
                             case 'O': kind = CommonGeneratedNameKind.DelegateCacheContainerType; break;
                             case 'o': kind = CommonGeneratedNameKind.DynamicCallSiteContainerType; break;
+                            case 'P': kind = CommonGeneratedNameKind.PrimaryConstructorParameter; break;
                             case 'p': kind = CommonGeneratedNameKind.DynamicCallSiteField; break;
                             case '6': kind = CommonGeneratedNameKind.Deprecated_OuterscopeLocals; break;
                             case 'a': kind = CommonGeneratedNameKind.Deprecated_IteratorInstance; break;
@@ -1081,6 +1085,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
                 case CommonGeneratedNameKind.LambdaDisplayClass:
                 case CommonGeneratedNameKind.StateMachineType:
                 case CommonGeneratedNameKind.DynamicCallSiteContainerType:
+                case CommonGeneratedNameKind.DelegateCacheContainerType:
                     return true;
 
                 default:

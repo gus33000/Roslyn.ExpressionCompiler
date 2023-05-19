@@ -306,13 +306,14 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator
                 Try
                     For Each typeDefHandle In metadataReader.TypeDefinitions
                         Dim typeDef = metadataReader.GetTypeDefinition(typeDefHandle)
+                        Dim foundAttributeType = False
 
                         ' VB does ignores the StandardModuleAttribute on interfaces and nested
                         ' or generic types (see PENamedTypeSymbol.TypeKind).
                         If Not PEModule.IsNested(typeDef.Attributes) AndAlso
                             typeDef.GetGenericParameters().Count = 0 AndAlso
                             (typeDef.Attributes And TypeAttributes.[Interface]) = 0 AndAlso
-                            PEModule.FindTargetAttribute(metadataReader, typeDefHandle, AttributeDescription.StandardModuleAttribute).HasValue Then
+                            PEModule.FindTargetAttribute(metadataReader, typeDefHandle, AttributeDescription.StandardModuleAttribute, foundAttributeType).HasValue Then
 
                             Dim namespaceName = metadataReader.GetString(typeDef.Namespace)
                             [imports].Add(namespaceName)
@@ -370,7 +371,8 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator
                 localVariableNames:=ImmutableArray(Of String).Empty,
                 localConstants:=ImmutableArray(Of LocalSymbol).Empty,
                 reuseSpan:=Nothing,
-                containingDocumentName:=Nothing)
+                containingDocumentName:=Nothing,
+                isPrimaryConstructor:=False)
         End Function
 #End If
 

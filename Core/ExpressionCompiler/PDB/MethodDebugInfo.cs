@@ -20,14 +20,15 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             ImmutableDictionary<int, string>.Empty,
             ImmutableArray<ImmutableArray<ImportRecord>>.Empty,
             ImmutableArray<ExternAliasRecord>.Empty,
-            null,
-            null,
-            "",
-            ImmutableArray<string>.Empty,
-            default,
-            ImmutableArray<TLocalSymbol>.Empty,
-            ILSpan.MaxValue,
+            dynamicLocalMap: null,
+            tupleLocalMap: null,
+            defaultNamespaceName: "",
+            localVariableNames: ImmutableArray<string>.Empty,
+            parameterNames: ImmutableArray<string?>.Empty,
+            localConstants: ImmutableArray<TLocalSymbol>.Empty,
+            reuseSpan: ILSpan.MaxValue,
             containingDocumentName: null,
+            isPrimaryConstructor: false,
             CompilerKind.Unknown);
 
         /// <summary>
@@ -48,6 +49,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
         public readonly ImmutableArray<TLocalSymbol> LocalConstants;
         public readonly ILSpan ReuseSpan;
         public readonly string? ContainingDocumentName;
+        public readonly bool IsPrimaryConstructor;
         public readonly CompilerKind Compiler;
 
         public MethodDebugInfo(
@@ -63,6 +65,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             ImmutableArray<TLocalSymbol> localConstants,
             ILSpan reuseSpan,
             string? containingDocumentName,
+            bool isPrimaryConstructor,
             CompilerKind compiler)
         {
             RoslynDebug.Assert(!importRecordGroups.IsDefault);
@@ -84,6 +87,7 @@ namespace Microsoft.CodeAnalysis.ExpressionEvaluator
             LocalConstants = localConstants;
             ReuseSpan = reuseSpan;
             ContainingDocumentName = containingDocumentName;
+            IsPrimaryConstructor = isPrimaryConstructor;
             Compiler = compiler;
         }
 
