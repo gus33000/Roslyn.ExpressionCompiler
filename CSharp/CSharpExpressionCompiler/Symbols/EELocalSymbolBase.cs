@@ -77,6 +77,8 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             throw ExceptionUtilities.Unreachable();
         }
 
+        internal override bool HasSourceLocation => false;
+
         internal sealed override UseSiteInfo<AssemblySymbol> GetUseSiteInfo()
         {
             var type = this.TypeWithAnnotations;

@@ -292,6 +292,12 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator
             End Get
         End Property
 
+        Friend Overrides ReadOnly Property HasSetsRequiredMembers As Boolean
+            Get
+                Return _originalMethod.HasSetsRequiredMembers
+            End Get
+        End Property
+
         Public Overrides Function GetDllImportData() As DllImportData
             Return _originalMethod.GetDllImportData()
         End Function
