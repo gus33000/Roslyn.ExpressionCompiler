@@ -85,7 +85,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             // looking up file-local types. If there is no document name, use an invalid FilePathChecksumOpt.
             FileIdentifier fileIdentifier = methodDebugInfo.ContainingDocumentName is { } documentName
                 ? FileIdentifier.Create(documentName)
-                : new FileIdentifier { EncoderFallbackErrorMessage = null, FilePathChecksumOpt = ImmutableArray<byte>.Empty, DisplayFilePath = string.Empty };
+                : FileIdentifier.Create(filePathChecksumOpt: ImmutableArray<byte>.Empty, displayFilePath: string.Empty);
 
             NamespaceBinder = CreateBinderChain(
                 Compilation,
@@ -407,10 +407,9 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
                     var itemsAdded = PooledHashSet<string>.GetInstance();
 
                     // Method parameters
-                    int parameterIndex = m.IsStatic ? 0 : 1;
                     foreach (var parameter in m.Parameters)
                     {
-                        var parameterName = GetParameterName(parameterIndex, parameter);
+                        var parameterName = GetParameterName(parameter.Ordinal + (m.IsStatic ? 0 : 1), parameter);
                         if (_methodDebugInfo.Compiler.GetKind(parameterName) == GeneratedNameKind.None &&
                             !IsDisplayClassParameter(parameter, _methodDebugInfo.Compiler))
                         {
@@ -438,10 +437,8 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
                                 }
                             }
 
-                            AppendParameterAndMethod(localBuilder, methodBuilder, parameter, container, parameterIndex);
+                            AppendParameterAndMethod(localBuilder, methodBuilder, parameter, container, m.IsStatic);
                         }
-
-                        parameterIndex++;
                     }
 
                     // In case of iterator or async state machine, the 'm' method has no parameters
@@ -555,11 +552,12 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             ArrayBuilder<MethodSymbol> methodBuilder,
             ParameterSymbol parameter,
             EENamedTypeSymbol container,
-            int parameterIndex)
+            bool isStaticMethod)
         {
             // Note: The native EE doesn't do this, but if we don't escape keyword identifiers,
             // the ResultProvider needs to be able to disambiguate cases like "this" and "@this",
             // which it can't do correctly without semantic information.
+            var parameterIndex = parameter.Ordinal + (isStaticMethod ? 0 : 1);
             var name = SyntaxHelpers.EscapeKeywordIdentifiers(GetParameterName(parameterIndex, parameter));
             var methodName = GetNextMethodName(methodBuilder);
             var method = this.GetParameterMethod(container, methodName, name, parameterIndex);

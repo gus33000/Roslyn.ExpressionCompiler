@@ -97,6 +97,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
                 return BoundCall.Synthesized(
                     syntax,
                     receiverOpt: null,
+                    initialBindingReceiverIsSubjectToCloning: ThreeState.Unknown,
                     method: method,
                     arguments: ImmutableArray.Create<BoundExpression>(argument));
             }

@@ -163,7 +163,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
         }
 
         internal override bool IsFileLocal => false;
-        internal override FileIdentifier? AssociatedFileIdentifier => null;
+        internal override FileIdentifier AssociatedFileIdentifier => null;
 
         public override IEnumerable<string> MemberNames
         {
@@ -382,5 +382,14 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             length = 0;
             return false;
         }
+
+#nullable enable
+        internal sealed override bool HasCollectionBuilderAttribute(out TypeSymbol? builderType, out string? methodName)
+        {
+            builderType = null;
+            methodName = null;
+            return false;
+        }
+#nullable disable
     }
 }
